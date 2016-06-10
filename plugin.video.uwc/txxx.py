@@ -32,7 +32,7 @@ def Main():
 def List(url):
     listhtml = utils.getHtml(url, '')
     match = re.compile('<a href="([^"]+)".*?src="([^"]+)".*?alt="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(listhtml)
-    for videopage, name, img in match:
+    for videopage, img, name in match:
         name = utils.cleantext(name)
         utils.addDownLink(name, videopage, 907, img, '')
     try:

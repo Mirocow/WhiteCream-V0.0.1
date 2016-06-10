@@ -38,7 +38,7 @@ def WXFMain():
 
 def WXFCat(url):
     cathtml = utils.getHtml(url, '')
-    match = re.compile('data-lazy-src="([^"]+)".*?<a href="([^"]+)"[^<]+<span>([^<]+)</s.*?">([^<]+)', re.DOTALL | re.IGNORECASE).findall(cathtml)
+    match = re.compile('\sdata-lazy-src="([^"]+)" class=".*?".*?<a href="([^"]+)"[^<]+<span>([^<]+)</s.*?">([^<]+)', re.DOTALL | re.IGNORECASE).findall(cathtml)
     for img, catpage, name, videos in match:
         catpage = catpage + 'page/1/'
         name = name + ' [COLOR deeppink]' + videos + '[/COLOR]'
@@ -67,17 +67,21 @@ def WXFSearch(url, keyword=None):
 def WXFList(url, page, onelist=None):
     if onelist:
         url = url.replace('/page/1/','/page/'+str(page)+'/')
+
     sort = getWXFSortMethod()
+
     if re.search('\?', url, re.DOTALL | re.IGNORECASE):
         url = url + '&filtre=' + sort + '&display=extract'
     else:
         url = url + '?filtre=' + sort + '&display=extract'
+
     listhtml = utils.getHtml(url, '')
-    match = re.compile('data-lazy-src="([^"]+)".*?<a href="([^"]+)" title="([^"]+)".*?<p>([^<]+)</p>', re.DOTALL | re.IGNORECASE).findall(listhtml)
+    match = re.compile('\sdata-lazy-src="([^"]+)" class=".*?".*?<a href="([^"]+)" title="([^"]+)".*?<span>([^<]+)</span>', re.DOTALL | re.IGNORECASE).findall(listhtml)
     for img, videopage, name, desc in match:
         name = utils.cleantext(name)
         desc = utils.cleantext(desc)
         utils.addDownLink(name, videopage, 13, img, desc)
+
     if not onelist:
         if re.search('<link rel="next"', listhtml, re.DOTALL | re.IGNORECASE):
             npage = page + 1        

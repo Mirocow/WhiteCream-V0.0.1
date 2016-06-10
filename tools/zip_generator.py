@@ -21,8 +21,7 @@ def create_zip_file(addon_dir):
   version = get_plugin_version(addon_dir)
   if not version:
     return
-  with ZipFile(addon_dir + os.sep + addon_dir + '-' + version + '.zip',
-               'w') as addonzip:
+  with ZipFile(addon_dir + os.sep + addon_dir + '-' + version + '.zip', 'w') as addonzip:
     for root, dirs, files in os.walk(addon_dir):
       for file_path in files:
         if file_path.endswith('.zip'):
@@ -35,6 +34,7 @@ def create_zip_file(addon_dir):
           continue          
         print "adding %s" % os.path.join(root, file_path) 
         addonzip.write(os.path.join(root, file_path))
+
     addonzip.close()
 
 

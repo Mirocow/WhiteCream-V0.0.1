@@ -1,7 +1,7 @@
 WhiteCream-V0.0.2
 =================
 
-Adult Channel
+Adult Channels
 
 
 # Using

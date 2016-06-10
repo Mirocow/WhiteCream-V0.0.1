@@ -1,4 +1,7 @@
-[B]Version 1.1.14[/B]
+[B]Version 1.1.15[/B]
+Added: txxx.com
+
+[B]Version 1.1.15[/B]
 Fixed: watchxxxfree
 
 [B]Version 1.1.13[/B]

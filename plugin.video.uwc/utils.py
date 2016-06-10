@@ -30,7 +30,7 @@ __scriptname__ = "Ultimate Whitecream"
 __author__ = "mortael"
 __scriptid__ = "plugin.video.uwc"
 __credits__ = "mortael, Fr33m1nd, anton40, NothingGnome, Mirocow"
-__version__ = "1.1.14"
+__version__ = "1.1.15"
 
 USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
 
@@ -380,6 +380,7 @@ def playvideo(videosource, name, download=None, url=None):
         videourl = re.compile('src",\s?"([^"]+)', re.DOTALL | re.IGNORECASE).findall(vmunpacked)
         videourl = videourl[0]
         videourl = videourl + '|Referer=' + vmhost + '&User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
+
     elif vidhost == 'OpenLoad':
         progress.update( 40, "", "Loading Openload", "" )
         openloadurl = re.compile(r"//(?:www\.)?openload\.(?:co|io)?/(?:embed|f)/([0-9a-zA-Z-_]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -394,6 +395,7 @@ def playvideo(videosource, name, download=None, url=None):
         except:
             notify('Oh oh','Couldn\'t find playable OpenLoad link')
             return
+
     elif vidhost == 'Streamin':
         progress.update( 40, "", "Loading Streamin", "" )
         streaminurl = re.compile(r"//(?:www\.)?streamin\.to/(?:embed-)?([0-9a-zA-Z]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -404,6 +406,7 @@ def playvideo(videosource, name, download=None, url=None):
         videourl = re.compile('image: "(http://[^/]+/)', re.DOTALL | re.IGNORECASE).findall(streaminsrc)
         progress.update( 80, "", "Getting video file from Streamin", "" )
         videourl = videourl[0] + videohash[0] + "/v.mp4"
+
     elif vidhost == 'FlashX':
         progress.update( 40, "", "Loading FlashX", "" )
         flashxurl = re.compile(r"//(?:www\.)?flashx\.tv/(?:embed-)?([0-9a-zA-Z]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -420,6 +423,7 @@ def playvideo(videosource, name, download=None, url=None):
         except: flashxujs = flashxjs[0]
         videourl = re.compile(r'\[{\s?file:\s?"([^"]+)",', re.DOTALL | re.IGNORECASE).findall(flashxujs)
         videourl = videourl[0]
+
     elif vidhost == 'Mega3X':
         progress.update( 40, "", "Loading Mega3X", "" )
         mega3xurl = re.compile(r"(https?://(?:www\.)?mega3x.net/(?:embed-)?(?:[0-9a-zA-Z]+).html)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -429,7 +433,8 @@ def playvideo(videosource, name, download=None, url=None):
         progress.update( 80, "", "Getting video file from Mega3X", "" )
         mega3xujs = unpack(mega3xjs[0])
         videourl = re.compile('file:\s?"([^"]+mp4)"', re.DOTALL | re.IGNORECASE).findall(mega3xujs)
-        videourl = videourl[0]  
+        videourl = videourl[0]
+
     elif vidhost == 'StreamCloud':
         progress.update( 40, "", "Opening Streamcloud", "" )
         streamcloudurl = re.compile(r"//(?:www\.)?streamcloud\.eu?/([0-9a-zA-Z-_/.]+html)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -444,6 +449,7 @@ def playvideo(videosource, name, download=None, url=None):
         progress.update( 60, "", "Grabbing video file", "" )    
         newscpage = postHtml(streamcloudurl, form_data=form_values)
         videourl = re.compile('file: "(.+?)",', re.DOTALL | re.IGNORECASE).findall(newscpage)[0]
+
     elif vidhost == 'Jetload':
         progress.update( 40, "", "Loading Jetload", "" )
         jlurl = re.compile(r'jetload\.tv/([^"]+)', re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -452,6 +458,7 @@ def playvideo(videosource, name, download=None, url=None):
         jlsrc = getHtml(jlurl, url)
         videourl = re.compile(r'<source src="([^"]+)', re.DOTALL | re.IGNORECASE).findall(jlsrc)
         videourl = videourl[0]
+
     elif vidhost == 'Videowood':
         progress.update( 40, "", "Loading Videowood", "" )
         vwurl = re.compile(r"//(?:www\.)?videowood\.tv/(?:embed|video)/([0-9a-zA-Z]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -504,6 +511,7 @@ def getHtml(url, referer='', hdr=None, NoCookie=None, data=None):
         req.add_header('Referer', referer)
     if data:
         req.add_header('Content-Length', len(data))
+
     response = urlopen(req, timeout=60)
     if response.info().get('Content-Encoding') == 'gzip':
         buf = StringIO( response.read())
@@ -630,7 +638,8 @@ def addDir(name, url, mode, iconimage, page=None, channel=None, section=None, ke
     liz.setInfo(type="Video", infoLabels={"Title": name})
     ok = xbmcplugin.addDirectoryItem(handle=addon_handle, url=u, listitem=liz, isFolder=Folder)
     return ok
-    
+
+
 def _get_keyboard(default="", heading="", hidden=False):
     """ shows a keyboard and returns a value """
     keyboard = xbmc.Keyboard(default, heading, hidden)
@@ -693,6 +702,7 @@ def decodeOpenLoad(html):
         videourl = re.search(r"vr\s?=\s?\"|'([^\"']+)", decodestring, re.DOTALL | re.IGNORECASE).group(1)
     
     return videourl
+
 
 def decode(encoded):
     for octc in (c for c in re.findall(r'\\(\d{2,3})', encoded)):
@@ -817,10 +827,12 @@ def searchDir(url, mode, page=None):
         for (keyword,) in c.fetchall():
             name = '[COLOR deeppink]' + urllib.unquote_plus(keyword) + '[/COLOR]'
             addDir(name, url, mode, '', page=page, keyword=keyword)
+
     except: pass
     addDir('[COLOR hotpink]Add Keyword[/COLOR]', url, 902, '', '', mode, Folder=False)
     addDir('[COLOR hotpink]Clear list[/COLOR]', '', 903, '', Folder=False)
     xbmcplugin.endOfDirectory(addon_handle)
+
 
 def newSearch(url, mode):
     vq = _get_keyboard(heading="Searching for...")
@@ -828,11 +840,6 @@ def newSearch(url, mode):
     title = urllib.quote_plus(vq)
     addKeyword(title)
     xbmc.executebuiltin('Container.Refresh')
-    #searchcmd = (sys.argv[0] +
-    #     "?url=" + urllib.quote_plus(url) +
-    #     "&mode=" + str(mode) +
-    #     "&keyword=" + urllib.quote_plus(title))
-    #xbmc.executebuiltin('xbmc.RunPlugin('+searchcmd+')')
 
 
 def clearSearch():

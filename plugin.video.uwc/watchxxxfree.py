@@ -73,7 +73,7 @@ def WXFList(url, page, onelist=None):
     else:
         url = url + '?filtre=' + sort + '&display=extract'
     listhtml = utils.getHtml(url, '')
-    match = re.compile('data-src="([^"]+)".*?<a href="([^"]+)" title="([^"]+)".*?<p>([^<]+)</p>', re.DOTALL | re.IGNORECASE).findall(listhtml)
+    match = re.compile('data-lazy-src="([^"]+)".*?<a href="([^"]+)" title="([^"]+)".*?<p>([^<]+)</p>', re.DOTALL | re.IGNORECASE).findall(listhtml)
     for img, videopage, name, desc in match:
         name = utils.cleantext(name)
         desc = utils.cleantext(desc)

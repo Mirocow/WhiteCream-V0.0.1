@@ -320,6 +320,7 @@ def PLAYVIDEO(url, name, download=None):
 
 def playvideo(videosource, name, download=None, url=None):
     hosts = []
+
     if re.search('videomega\.tv/', videosource, re.DOTALL | re.IGNORECASE):
         hosts.append('VideoMega')
     if re.search('openload\.(?:co|io)?/', videosource, re.DOTALL | re.IGNORECASE):
@@ -336,6 +337,7 @@ def playvideo(videosource, name, download=None, url=None):
         hosts.append('Jetload')
     if re.search('videowood\.tv/', videosource, re.DOTALL | re.IGNORECASE):
         hosts.append('Videowood')
+
     if len(hosts) == 0:
         progress.close()
         notify('Oh oh','Couldn\'t find any video')
@@ -369,6 +371,7 @@ def playvideo(videosource, name, download=None, url=None):
             hashkey = chkmultivids(hashkey)
             hashpage = getHtml('http://videomega.tv/validatehash.php?hashkey='+hashkey, url)
             hashref = re.compile('ref="([^"]+)', re.DOTALL | re.IGNORECASE).findall(hashpage)
+
         progress.update( 80, "", "Getting video file from Videomega", "" )
         vmhost = 'http://videomega.tv/view.php?ref=' + hashref[0]
         videopage = getHtml(vmhost, url)
@@ -457,6 +460,7 @@ def playvideo(videosource, name, download=None, url=None):
         vwsrc = getHtml(vwurl, url)
         progress.update( 80, "", "Getting video file from Videowood", "" )
         videourl = videowood(vwsrc)
+
     progress.close()
     playvid(videourl, name, download)
 

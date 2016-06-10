@@ -40,14 +40,18 @@ def create_zip_file(addon_dir):
 def main():
   dirs = (os.listdir('.'))
   for addon_dir in dirs:
+
     if(not os.path.isdir(addon_dir)):
-      continue	  
+      continue
+
     if(addon_dir.startswith('.')):
       # skip hidden dirs
       continue
-    if(addon_dir == "repository.whitecream"):
+
+    if(addon_dir == "../repository.whitecream"):
       # skip download directory
       continue
+
     create_zip_file(addon_dir)
 
 if __name__ == '__main__':

@@ -1,9 +1,11 @@
 [B]Version 1.1.14[/B]
 Fixed: watchxxxfree
 
+[B]Version 1.1.13[/B]
+replace repository
+
 [B]Version 1.1.12[/B]
 Fixed: Openload
-
 
 [B]Version 1.1.11[/B]
 Fixed: Hentai section

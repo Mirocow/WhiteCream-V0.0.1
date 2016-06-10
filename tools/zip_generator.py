@@ -11,6 +11,7 @@ def get_plugin_version(addon_dir):
     data = open(addon_file, 'r').read()
     node = xml.etree.ElementTree.XML(data)
     return(node.get('version'))
+
   except Exception as e:
     print 'Failed to open %s' % addon_file
     print e.message
@@ -48,8 +49,12 @@ def main():
       # skip hidden dirs
       continue
 
-    if(addon_dir == "../repository.whitecream"):
+    #if(addon_dir == "repository.whitecream"):
       # skip download directory
+      #continue
+
+    if(addon_dir == "tools"):
+      # skip tools directory
       continue
 
     create_zip_file(addon_dir)

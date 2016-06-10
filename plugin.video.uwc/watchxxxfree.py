@@ -38,7 +38,7 @@ def WXFMain():
 
 def WXFCat(url):
     cathtml = utils.getHtml(url, '')
-    match = re.compile('data-src="([^"]+)".*?<a href="([^"]+)"[^<]+<span>([^<]+)</s.*?">([^<]+)', re.DOTALL | re.IGNORECASE).findall(cathtml)
+    match = re.compile('data-lazy-src="([^"]+)".*?<a href="([^"]+)"[^<]+<span>([^<]+)</s.*?">([^<]+)', re.DOTALL | re.IGNORECASE).findall(cathtml)
     for img, catpage, name, videos in match:
         catpage = catpage + 'page/1/'
         name = name + ' [COLOR deeppink]' + videos + '[/COLOR]'

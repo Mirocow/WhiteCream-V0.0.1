@@ -3,7 +3,6 @@
 import os
 import md5
 
-
 class Generator:
     """
         Generates a new addons.xml file from each addons addon.xml file
@@ -15,7 +14,7 @@ class Generator:
         self._generate_addons_file()
         self._generate_md5_file()
         # notify user
-        print "Finished updating addons xml and md5 files"
+        print "Finished updating addons xml and md5/hashlib files"
 
     def _generate_addons_file( self ):
         # addon list
@@ -52,9 +51,9 @@ class Generator:
     def _generate_md5_file( self ):
         try:
             # create a new md5 hash
-            m = md5.new( open( "addons.xml" ).read() ).hexdigest()
+            m = md5.new( open( "./addons.xml" ).read() ).hexdigest()
             # save file
-            self._save_file( m, file="addons.xml.md5" )
+            self._save_file( m, file="./addons.xml.md5" )
         except Exception, e:
             # oops
             print "An error occurred creating addons.xml.md5 file!\n%s" % ( e, )

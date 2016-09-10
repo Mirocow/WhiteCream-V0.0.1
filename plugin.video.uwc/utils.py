@@ -19,9 +19,10 @@
 '''
 
 import urllib, urllib2, re, cookielib, os.path, sys, socket, time, tempfile, string
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon, sqlite3, urlparse, xbmcvfs
+import xbmc, xbmcplugin, xbmcgui, xbmcaddon, sqlite3, urlparse, xbmcvfs, base64
 
 from jsunpack import unpack
+
 
 from StringIO import StringIO
 import gzip
@@ -30,7 +31,7 @@ __scriptname__ = "Ultimate Whitecream"
 __author__ = "mortael"
 __scriptid__ = "plugin.video.uwc"
 __credits__ = "mortael, Fr33m1nd, anton40, NothingGnome, Mirocow"
-__version__ = "1.1.16"
+__version__ = "1.1.35"
 
 USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
 
@@ -152,9 +153,6 @@ def downloadVideo(url, name):
 
         try:    resumable = 'bytes' in resp.headers['Accept-Ranges'].lower()
         except: resumable = False
-
-        #print "Download Header"
-        #print resp.headers
         if resumable:
             print "Download is resumable"
 
@@ -175,8 +173,6 @@ def downloadVideo(url, name):
         sleep   = 0
 
         print 'Download File Size : %dMB %s ' % (mb, dest)
-
-        #f = open(dest, mode='wb')
         f = xbmcvfs.File(dest, 'w')
 
         chunk  = None
@@ -323,10 +319,14 @@ def playvideo(videosource, name, download=None, url=None):
 
     if re.search('videomega\.tv/', videosource, re.DOTALL | re.IGNORECASE):
         hosts.append('VideoMega')
+    if re.search('megavideo\.pro/', videosource, re.DOTALL | re.IGNORECASE):
+        hosts.append('VideoMega')
     if re.search('openload\.(?:co|io)?/', videosource, re.DOTALL | re.IGNORECASE):
         hosts.append('OpenLoad')
+    if re.search('oload\.(?:co|io)?/', videosource, re.DOTALL | re.IGNORECASE):
+        hosts.append('OpenLoad')
     if re.search('streamin\.to/', videosource, re.DOTALL | re.IGNORECASE):
-        hosts.append('Streamin')          
+        hosts.append('Streamin')
     if re.search('flashx\.tv/', videosource, re.DOTALL | re.IGNORECASE):
         hosts.append('FlashX')
     if re.search('mega3x\.net/', videosource, re.DOTALL | re.IGNORECASE):
@@ -337,7 +337,17 @@ def playvideo(videosource, name, download=None, url=None):
         hosts.append('Jetload')
     if re.search('videowood\.tv/', videosource, re.DOTALL | re.IGNORECASE):
         hosts.append('Videowood')
-
+    if re.search('streamdefence.com/view\.php', videosource, re.DOTALL | re.IGNORECASE):
+        hosts.append('Streamdefence')
+    if re.search('datoporn.com', videosource, re.DOTALL | re.IGNORECASE):
+        hosts.append('Datoporn')
+    if re.search('<source', videosource, re.DOTALL | re.IGNORECASE):
+        hosts.append('Direct Source')        
+    if not 'keeplinks' in url:
+        if re.search('keeplinks\.eu/p', videosource, re.DOTALL | re.IGNORECASE):
+            hosts.append('Keeplinks <--') 
+    if re.search('filecrypt.cc/Container', videosource, re.DOTALL | re.IGNORECASE):
+        hosts.append('Filecrypt')              
     if len(hosts) == 0:
         progress.close()
         notify('Oh oh','Couldn\'t find any video')
@@ -347,6 +357,8 @@ def playvideo(videosource, name, download=None, url=None):
             vidhost = hosts[0]            
         else:
             vh = dialog.select('Videohost:', hosts)
+            if vh == -1:
+                return
             vidhost = hosts[vh]
     else:
         vidhost = hosts[0]
@@ -357,7 +369,7 @@ def playvideo(videosource, name, download=None, url=None):
             hashref = re.compile("""javascript["']>ref=['"]([^'"]+)""", re.DOTALL | re.IGNORECASE).findall(videosource)
         elif re.search("videomega.tv/iframe.php", videosource, re.DOTALL | re.IGNORECASE):
             hashref = re.compile(r"iframe\.php\?ref=([^&]+)&", re.DOTALL | re.IGNORECASE).findall(videosource)
-        elif re.search("videomega.tv/view.php", videosource, re.DOTALL | re.IGNORECASE):
+        elif re.search("view.php\?ref=", videosource, re.DOTALL | re.IGNORECASE):
             hashref = re.compile(r'view\.php\?ref=([^"]+)', re.DOTALL | re.IGNORECASE).findall(videosource)
         elif re.search("videomega.tv/cdn.php", videosource, re.DOTALL | re.IGNORECASE):
             hashref = re.compile(r'cdn\.php\?ref=([^"]+)', re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -383,15 +395,16 @@ def playvideo(videosource, name, download=None, url=None):
 
     elif vidhost == 'OpenLoad':
         progress.update( 40, "", "Loading Openload", "" )
-        openloadurl = re.compile(r"//(?:www\.)?openload\.(?:co|io)?/(?:embed|f)/([0-9a-zA-Z-_]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
+        openloadurl = re.compile(r"//(?:www\.)?o(?:pen)?load\.(?:co|io)?/(?:embed|f)/([0-9a-zA-Z-_]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
         openloadurl = chkmultivids(openloadurl)
         
-        openloadurl1 = 'http://openload.co/embed/%s/' % openloadurl
+        openloadurl1 = 'http://openload.io/embed/%s/' % openloadurl
 
         try:
             openloadsrc = getHtml(openloadurl1, '', openloadhdr)
             progress.update( 80, "", "Getting video file from OpenLoad", "")
             videourl = decodeOpenLoad(openloadsrc)
+            videourl = videourl + '|Referer='+ openloadurl1 + '&User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
         except:
             notify('Oh oh','Couldn\'t find playable OpenLoad link')
             return
@@ -410,20 +423,41 @@ def playvideo(videosource, name, download=None, url=None):
     elif vidhost == 'FlashX':
         progress.update( 40, "", "Loading FlashX", "" )
         flashxurl = re.compile(r"//(?:www\.)?flashx\.tv/(?:embed-)?([0-9a-zA-Z]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
-        flashxurl = chkmultivids(flashxurl)       
-        flashxurl = 'http://flashx.tv/embed-%s-670x400.html' % flashxurl
-        flashxsrc = getHtml2(flashxurl)
-        progress.update( 60, "", "Grabbing video file", "" )
-        flashxurl2 = re.compile('<a href="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(flashxsrc)
-        flashxsrc2 = getHtml2(flashxurl2[0])
-        progress.update( 70, "", "Grabbing video file", "" ) 
-        flashxjs = re.compile("<script type='text/javascript'>([^<]+)</sc", re.DOTALL | re.IGNORECASE).findall(flashxsrc2)
+        media_id = chkmultivids(flashxurl)       
+        flashxurl = 'http://www.flashx.tv/%s.html' % media_id
+        req = Request(flashxurl, None, headers)
+        flashx = urllib2.urlopen(req)
+        #flashxcookie = flashx.info()['set-cookie']
+        flashxdata = flashx.read()
+        #cfduid = re.search('cfduid=(.*?);', flashxcookie).group(1)
+        file_id = re.search("'file_id', '(.*?)'", flashxdata).group(1)
+        aff = re.search("'aff', '(.*?)'", flashxdata).group(1)
+        headers2 = { 'Referer': flashxurl,
+                    'Cookie': '; lang=1'}
+        surl = re.search('src="(.*?' + file_id + ')',flashxdata).group(1)
+        dummy = getHtml(surl, flashxurl, headers2)
+        headers2 = { 'Referer': flashxurl,
+                    'Cookie': 'lang=1; file_id=' + file_id + '; aff=' + aff }
+        progress.update( 60, "", "Grabbing video file", "" )                    
+        flashxhtml = getHtml(flashxurl, flashxurl, headers)
+        fname = re.search('name="fname" value="(.*?)"', flashxhtml).group(1)
+        hash = re.search('name="hash" value="(.*?)"', flashxhtml).group(1)
+        fdata = { 'op': 'download1',
+                  'usr_login': '',
+                  'id': media_id,
+                  'fname': fname,
+                  'referer': '',
+                  'hash': hash,
+                  'imhuman': 'Proceed to video' }
+        furl = 'http://www.flashx.tv/dl?' + media_id
+        time.sleep(5)
+        progress.update( 70, "", "Grabbing video file", "" )        
+        flashxhtml2 = postHtml(furl, fdata, headers2, False)
+        flashxjs = re.compile('(eval\(function.*?)</script>', re.DOTALL | re.IGNORECASE).findall(flashxhtml2)
         progress.update( 80, "", "Getting video file from FlashX", "" )
-        try: flashxujs = unpack(flashxjs[0])
-        except: flashxujs = flashxjs[0]
-        videourl = re.compile(r'\[{\s?file:\s?"([^"]+)",', re.DOTALL | re.IGNORECASE).findall(flashxujs)
-        videourl = videourl[0]
-
+        try: flashxujs = unpack(flashxjs[1])
+        except: flashxujs = flashxjs[1]
+        videourl = re.compile('file:"([^"]+)"', re.DOTALL | re.IGNORECASE).findall(flashxujs)[0]
     elif vidhost == 'Mega3X':
         progress.update( 40, "", "Loading Mega3X", "" )
         mega3xurl = re.compile(r"(https?://(?:www\.)?mega3x.net/(?:embed-)?(?:[0-9a-zA-Z]+).html)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -432,9 +466,19 @@ def playvideo(videosource, name, download=None, url=None):
         mega3xjs = re.compile("<script[^>]+>(eval[^<]+)</sc", re.DOTALL | re.IGNORECASE).findall(mega3xsrc)
         progress.update( 80, "", "Getting video file from Mega3X", "" )
         mega3xujs = unpack(mega3xjs[0])
-        videourl = re.compile('file:\s?"([^"]+mp4)"', re.DOTALL | re.IGNORECASE).findall(mega3xujs)
+        videourl = re.compile('file:\s?"([^"]+m3u8)"', re.DOTALL | re.IGNORECASE).findall(mega3xujs)
         videourl = videourl[0]
-
+    elif vidhost == 'Datoporn':
+        progress.update( 40, "", "Loading Datoporn", "" )
+        datourl = re.compile(r"//(?:www\.)?datoporn\.com/(?:embed-)?([0-9a-zA-Z]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
+        datourl = chkmultivids(datourl)
+        datourl = "http://datoporn.com/embed-" + datourl + ".html"
+        datosrc = getHtml(datourl,'', openloadhdr)
+        datojs = re.compile("<script[^>]+>(eval[^<]+)</sc", re.DOTALL | re.IGNORECASE).findall(datosrc)
+        progress.update( 80, "", "Getting video file from Datoporn", "" )
+        datoujs = unpack(datojs[0])
+        videourl = re.compile('file:"([^"]+mp4)"', re.DOTALL | re.IGNORECASE).findall(datoujs)
+        videourl = videourl[0]          
     elif vidhost == 'StreamCloud':
         progress.update( 40, "", "Opening Streamcloud", "" )
         streamcloudurl = re.compile(r"//(?:www\.)?streamcloud\.eu?/([0-9a-zA-Z-_/.]+html)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -448,15 +492,14 @@ def playvideo(videosource, name, download=None, url=None):
             form_values[name] = value.replace("download1","download2")
         progress.update( 60, "", "Grabbing video file", "" )    
         newscpage = postHtml(streamcloudurl, form_data=form_values)
-        videourl = re.compile('file: "(.+?)",', re.DOTALL | re.IGNORECASE).findall(newscpage)[0]
-
+        videourl = re.compile('file:\s*"(.+?)",', re.DOTALL | re.IGNORECASE).findall(newscpage)[0]
     elif vidhost == 'Jetload':
         progress.update( 40, "", "Loading Jetload", "" )
         jlurl = re.compile(r'jetload\.tv/([^"]+)', re.DOTALL | re.IGNORECASE).findall(videosource)
         jlurl = chkmultivids(jlurl)
         jlurl = "http://jetload.tv/" + jlurl
         jlsrc = getHtml(jlurl, url)
-        videourl = re.compile(r'<source src="([^"]+)', re.DOTALL | re.IGNORECASE).findall(jlsrc)
+        videourl = re.compile(r'file: "([^"]+)', re.DOTALL | re.IGNORECASE).findall(jlsrc)
         videourl = videourl[0]
 
     elif vidhost == 'Videowood':
@@ -467,7 +510,59 @@ def playvideo(videosource, name, download=None, url=None):
         vwsrc = getHtml(vwurl, url)
         progress.update( 80, "", "Getting video file from Videowood", "" )
         videourl = videowood(vwsrc)
-
+    elif vidhost == 'Keeplinks <--':
+        progress.update( 40, "", "Loading Keeplinks", "" )
+        klurl = re.compile(r"//(?:www\.)?keeplinks\.eu/p([0-9a-zA-Z/]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
+        klurl = chkmultivids(klurl)
+        klurl = 'http://www.keeplinks.eu/p' + klurl
+        kllink = getVideoLink(klurl, '')
+        kllinkid = kllink.split('/')[-1]
+        klheader = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+           'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+           'Accept-Encoding': 'none',
+           'Accept-Language': 'en-US,en;q=0.8',
+           'Connection': 'keep-alive',
+           'Cookie': 'flag['+kllinkid+'] = 1;'} 
+        klpage = getHtml(kllink, klurl, klheader)
+        playvideo(klpage, name, download, klurl)
+        return
+    elif vidhost == 'Streamdefence':
+        progress.update( 40, "", "Loading Streamdefence", "" )
+        sdurl = re.compile(r'streamdefence\.com/view.php\?ref=([^"]+)"', re.DOTALL | re.IGNORECASE).findall(videosource)
+        sdurl = chkmultivids(sdurl)
+        sdurl = 'http://www.streamdefence.com/view.php?ref=' + sdurl
+        sdsrc = getHtml(sdurl, url)
+        progress.update( 80, "", "Getting video file from Streamdefence", "" )
+        sdpage = streamdefence(sdsrc)
+        playvideo(sdpage, name, download, sdurl)
+        return
+    elif vidhost == 'Filecrypt':
+        progress.update( 40, "", "Loading Filecrypt", "" )
+        fcurl = re.compile(r'filecrypt\.cc/Container/([^\.]+)\.html', re.DOTALL | re.IGNORECASE).findall(videosource)
+        fcurl = chkmultivids(fcurl)
+        fcurl = 'http://filecrypt.cc/Container/' + fcurl + ".html"
+        fcsrc = getHtml(fcurl, url)
+        fcmatch = re.compile(r"onclick=\"openLink.?'([\w\-]*)',", re.DOTALL | re.IGNORECASE).findall(fcsrc)
+        progress.update( 80, "", "Getting video file from Filecrypt", "" )
+        fcurls = ""
+        for fclink in fcmatch:
+            fcpage = "http://filecrypt.cc/Link/" + fclink + ".html"
+            fcpagesrc = getHtml(fcpage, fcurl)
+            fclink2 = re.search('<iframe .*? noresize src="(.*)"></iframe>', fcpagesrc)
+            if fclink2:
+                try:
+                    fcurl2 = getVideoLink(fclink2.group(1), fcpage)
+                    fcurls = fcurls + " " + fcurl2
+                except:
+                    pass
+        playvideo(fcurls, name, download, fcurl)
+        return
+    elif vidhost == 'Direct Source':
+        progress.update( 40, "", "Loading Direct source", "" )
+        dsurl = re.compile("""<source.*?src=(?:"|')([^"']+)[^>]+>""", re.DOTALL | re.IGNORECASE).findall(videosource)
+        dsurl = chkmultivids(dsurl)
+        videourl = dsurl        
     progress.close()
     playvid(videourl, name, download)
 
@@ -491,6 +586,8 @@ def chkmultivids(videomatch):
             hashlist.append('Video ' + str(i))
             i += 1
         mvideo = dialog.select('Multiple videos found', hashlist)
+        if mvideo == -1:
+            return
         return videolist[mvideo]
     else:
         return videomatch[0]
@@ -529,7 +626,7 @@ def getHtml(url, referer='', hdr=None, NoCookie=None, data=None):
     return data
 
     
-def postHtml(url, form_data={}, headers={}, compression=True):
+def postHtml(url, form_data={}, headers={}, compression=True, NoCookie=None):
     _user_agent = 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.1 ' + \
                   '(KHTML, like Gecko) Chrome/13.0.782.99 Safari/535.1'
     req = urllib2.Request(url)
@@ -543,7 +640,10 @@ def postHtml(url, form_data={}, headers={}, compression=True):
         req.add_header('Accept-Encoding', 'gzip')
     response = urllib2.urlopen(req)
     data = response.read()
-    cj.save(cookiePath)
+    if not NoCookie:
+        try:
+            cj.save(cookiePath)
+        except: pass
     response.close()
     return data
 
@@ -556,9 +656,13 @@ def getHtml2(url):
     return data 
 
     
-def getVideoLink(url, referer):
-    req2 = Request(url, '', headers)
-    req2.add_header('Referer', referer)
+def getVideoLink(url, referer, hdr=None, data=None):
+    if not hdr:
+        req2 = Request(url, data, headers)
+    else:
+        req2 = Request(url, data, hdr)
+    if len(referer) > 1:
+        req2.add_header('Referer', referer)
     url2 = urlopen(req2).geturl()
     return url2
 
@@ -610,9 +714,11 @@ def addDownLink(name, url, mode, iconimage, desc, stream=None, fav='add', noDown
         liz.setInfo(type="Video", infoLabels={"Title": name})
     else:
         liz.setInfo(type="Video", infoLabels={"Title": name, "plot": desc, "plotoutline": desc})
+    video_streaminfo = {'codec': 'h264'}
+    liz.addStreamInfo('video', video_streaminfo)
+    contextMenuItems.append(('[COLOR hotpink]' + favtext + ' favorites[/COLOR]', 'xbmc.RunPlugin('+favorite+')'))
     if noDownload == False:
         contextMenuItems.append(('[COLOR hotpink]Download Video[/COLOR]', 'xbmc.RunPlugin('+dwnld+')'))
-    contextMenuItems.append(('[COLOR hotpink]' + favtext + ' favorites[/COLOR]', 'xbmc.RunPlugin('+favorite+')'))
     liz.addContextMenuItems(contextMenuItems, replaceItems=False)
     ok = xbmcplugin.addDirectoryItem(handle=addon_handle, url=u, listitem=liz, isFolder=False)
     return ok
@@ -650,10 +756,42 @@ def _get_keyboard(default="", heading="", hidden=False):
  
  
 def decodeOpenLoad(html):
+    # by pitoosie
+    from HTMLParser import HTMLParser
+    from jjdecode import JJDecoder
+    hiddenurl = HTMLParser().unescape(re.search('hiddenurl">(.+?)<\/span>', html, re.IGNORECASE).group(1))
+    
+    
+    jjstring = re.compile("<script[^>]+>(j=~[^\n]+)\n", re.DOTALL | re.IGNORECASE).findall(html)[0]
+    jjstring = JJDecoder(jjstring).decode()
+    magicnumber = re.compile(r"charCodeAt\(\d+?\)\s*?\+\s*?(\d+?)\)", re.DOTALL | re.IGNORECASE).findall(jjstring)[0]
+    
+    s = []
+    for idx, i in enumerate(hiddenurl):
+        j = ord(i)
+        if (j>=33 & j<=126):
+            j = 33 + ((j + 14) % 94)
+        if idx == len(hiddenurl) - 1:
+            j += int(magicnumber)
+        s.append(chr(j))
+    res = ''.join(s)
+    
+    videoUrl = 'https://openload.co/stream/{0}?mime=true'.format(res)
+    dtext = videoUrl.replace('https', 'http')
+    UA = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0'
+    headers = {'User-Agent': UA }
+    
+    req = urllib2.Request(dtext,None,headers)
+    res = urllib2.urlopen(req)
+    videourl = res.geturl() 
+    res.close()
+    if 'pigeons.mp4' in videourl.lower():
+        return
+    else:
+        return videourl
 
-    # decodeOpenLoad made by mortael, please leave this line for proper credit :)
-    aastring = re.search(r"<video(?:.|\s)*?<script\s[^>]*?>.+?<\/script>\s<script\s[^>]*?>((?:.|\s)*?)<\/", html, re.DOTALL | re.IGNORECASE).group(1)
 
+def decodeAA(aastring):
     aastring = aastring.replace("(ﾟДﾟ)[ﾟεﾟ]+(oﾟｰﾟo)+ ((c^_^o)-(c^_^o))+ (-~0)+ (ﾟДﾟ) ['c']+ (-~-~1)+","")
     aastring = aastring.replace("((ﾟｰﾟ) + (ﾟｰﾟ) + (ﾟΘﾟ))", "9")
     aastring = aastring.replace("((ﾟｰﾟ) + (ﾟｰﾟ))","8")
@@ -678,6 +816,7 @@ def decodeOpenLoad(html):
     aastring = aastring.replace("(-~3)","4")
     aastring = aastring.replace("(0-0)","0")
     
+  
     decodestring = re.search(r"\\\+([^(]+)", aastring, re.DOTALL | re.IGNORECASE).group(1)
     decodestring = "\\+"+ decodestring
     decodestring = decodestring.replace("+","")
@@ -686,70 +825,16 @@ def decodeOpenLoad(html):
     decodestring = decode(decodestring)
     decodestring = decodestring.replace("\\/","/")
     
-    if 'toString' in decodestring:
-        base = re.compile(r"toString\(a\+(\d+)", re.DOTALL | re.IGNORECASE).findall(decodestring)[0]
-        base = int(base)
-        match = re.compile(r"(\(\d[^)]+\))", re.DOTALL | re.IGNORECASE).findall(decodestring)
-        for repl in match:
-            match1 = re.compile(r"(\d+),(\d+)", re.DOTALL | re.IGNORECASE).findall(repl)
-            base2 = base + int(match1[0][0])
-            repl2 = base10toN(int(match1[0][1]),base2)
-            decodestring = decodestring.replace(repl,repl2)
-        decodestring = decodestring.replace("+","")
-        decodestring = decodestring.replace("\"","")
-        videourl = re.search(r"(http[^\}]+)", decodestring, re.DOTALL | re.IGNORECASE).group(1)
-    else:
-        videourl = re.search(r"vr\s?=\s?\"|'([^\"']+)", decodestring, re.DOTALL | re.IGNORECASE).group(1)
-    
-    return videourl
+    return decodestring
+
 
 
 def decode(encoded):
+    s = []
     for octc in (c for c in re.findall(r'\\(\d{2,3})', encoded)):
-        encoded = encoded.replace(r'\%s' % octc, chr(int(octc, 8)))
-    return encoded.decode('utf8')
-
-
-def base10toN(num,n):
-    num_rep={10:'a',
-         11:'b',
-         12:'c',
-         13:'d',
-         14:'e',
-         15:'f',
-         16:'g',
-         17:'h',
-         18:'i',
-         19:'j',
-         20:'k',
-         21:'l',
-         22:'m',
-         23:'n',
-         24:'o',
-         25:'p',
-         26:'q',
-         27:'r',
-         28:'s',
-         29:'t',
-         30:'u',
-         31:'v',
-         32:'w',
-         33:'x',
-         34:'y',
-         35:'z'}
-    new_num_string=''
-    current=num
-    while current!=0:
-        remainder=current%n
-        if 36>remainder>9:
-            remainder_string=num_rep[remainder]
-        elif remainder>=36:
-            remainder_string='('+str(remainder)+')'
-        else:
-            remainder_string=str(remainder)
-        new_num_string=remainder_string+new_num_string
-        current=current/n
-    return new_num_string
+        s.append(chr(int(octc, 8)))
+        #encoded = encoded.replace(r'\%s' % octc, chr(int(octc, 8)))
+    return ''.join(s)
 
 
 # videowood decode copied from: https://github.com/schleichdi2/OpenNfr_E2_Gui-5.3/blob/4e3b5e967344c3ddc015bc67833a5935fc869fd4/lib/python/Plugins/Extensions/MediaPortal/resources/hosters/videowood.py    
@@ -819,6 +904,18 @@ def videowood(data):
         return
 
 
+def streamdefence(html):
+    if 'openload' in html:
+        return html
+    match = re.search(r'\("([^"]+)', html, re.DOTALL | re.IGNORECASE)
+    if match:
+        result = match.group()
+        decoded = base64.b64decode(result)
+    else:
+        decoded = base64.b64decode(html)
+    return streamdefence(decoded)
+        
+        
 def searchDir(url, mode, page=None):
     conn = sqlite3.connect(favoritesdb)
     c = conn.cursor()

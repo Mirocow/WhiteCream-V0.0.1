@@ -23,7 +23,7 @@ import utils, hdporn, porntrex, nudeflix, hentaicraving, watchxxxfree, xtheatre,
 import elreyx, thepornnation, xvideospanish, pelisxporno, hqporner, videomegaporn, streamxxx, yourfreetube
 import xtasie, streampleasure, chaturbate, pornkino, justporn, hdzog, cat3movie, tubepornclassic, paradisehill
 import freeomovie, hclips, pornhub, mrsexe, erotik, favorites, myfreecams, cam4, porndig, absoluporn, czechhd, xxxstreams
-import xxxsorg, eroticage, anybunny, spankbang, k18, sexix, txxx
+import xxxsorg, eroticage, anybunny, spankbang, k18, sexix, hentaihaven, pornkinox, camsoda, naked, txxx
 
 socket.setdefaulttimeout(60)
 
@@ -38,9 +38,9 @@ rootDir = utils.rootDir
 
 
 def INDEX():
-    utils.addDir('[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Scenes[/COLOR]','',2,os.path.join(rootDir, 'icon.png'),'')
-    utils.addDir('[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Movies[/COLOR]','',3,os.path.join(rootDir, 'icon.png'),'')
-    utils.addDir('[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Hentai[/COLOR]','',30,os.path.join(imgDir, 'hc.jpg'),'')
+    utils.addDir('[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Scenes[/COLOR]','',1,os.path.join(rootDir, 'icon.png'),'')
+    utils.addDir('[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Movies[/COLOR]','',2,os.path.join(rootDir, 'icon.png'),'')
+    utils.addDir('[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Hentai[/COLOR]','',3,os.path.join(rootDir, 'icon.png'),'')
     utils.addDir('[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Tubes[/COLOR]','',6,os.path.join(rootDir, 'icon.png'),'')
     utils.addDir('[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Webcams & Streams[/COLOR]','',7,os.path.join(rootDir, 'icon.png'),'')
     utils.addDir('[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Favorites[/COLOR]','',901,os.path.join(rootDir, 'icon.png'),'')
@@ -54,7 +54,7 @@ def INDEX():
             addon.setSetting('uwccounter','true')
         except: pass
         
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    xbmcplugin.endOfDirectory(utils.addon_handle, cacheToDisc=False)
 
 # Scenes
 def INDEXS():
@@ -83,7 +83,7 @@ def INDEXS():
     utils.addDir('[COLOR hotpink]Sexix[/COLOR]','http://sexix.net/',450,os.path.join(imgDir, 'sexix.png'),'')
     utils.addDir('[COLOR hotpink]TXXX[/COLOR]','http://www.txxx.com/',904,os.path.join(imgDir, ''),'')
     utils.addDir('[COLOR hotpink]One list, to watch them all[/COLOR]','',5,'',1)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    xbmcplugin.endOfDirectory(utils.addon_handle, cacheToDisc=False)
 
 # Movies
 def INDEXM():    
@@ -100,9 +100,9 @@ def INDEXM():
     utils.addDir('[COLOR hotpink]ParadiseHill[/COLOR]','http://www.paradisehill.tv/en/',250,os.path.join(imgDir, 'paradisehill.png'),'')
     utils.addDir('[COLOR hotpink]FreeOMovie[/COLOR]','http://www.freeomovie.com/',370,os.path.join(imgDir, 'freeomovie.png'),'')
     utils.addDir('[COLOR hotpink]Eroticage[/COLOR]','http://www.eroticage.net/',430,'','')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
-
-# Hentai
+    utils.addDir('[COLOR hotpink]PornKinoX[/COLOR]','http://www.pornkinox.com',470,os.path.join(imgDir, 'pornkinox.png'),'')
+    xbmcplugin.endOfDirectory(utils.addon_handle, cacheToDisc=False)
+    
 def INDEXT():
     utils.addDir('[COLOR hotpink]TodayPorn[/COLOR]','http://www.todayporn.com/page1.html',90,os.path.join(imgDir, 'tp.png'),'')
     utils.addDir('[COLOR hotpink]Poldertube.nl[/COLOR] [COLOR orange](Dutch)[/COLOR]','http://www.poldertube.nl/pornofilms/nieuw',100,os.path.join(imgDir, 'poldertube.png'),0)
@@ -116,15 +116,21 @@ def INDEXT():
     utils.addDir('[COLOR hotpink]AbsoluPorn[/COLOR]','http://www.absoluporn.com/en/',300,os.path.join(imgDir, 'absoluporn.gif'),'')
     utils.addDir('[COLOR hotpink]Anybunny[/COLOR]','http://anybunny.com/',320,os.path.join(imgDir, 'anybunny.png'),'')    
     utils.addDir('[COLOR hotpink]SpankBang[/COLOR]','http://spankbang.com/new_videos/',440,os.path.join(imgDir, 'spankbang.png'),'')	
-    xbmcplugin.endOfDirectory(utils.addon_handle)
-
-# Tubes
+    xbmcplugin.endOfDirectory(utils.addon_handle, cacheToDisc=False)
+    
 def INDEXW():
     utils.addDir('[COLOR hotpink]Chaturbate[/COLOR] [COLOR white]- webcams[/COLOR]','https://chaturbate.com/?page=1',220,os.path.join(imgDir, 'chaturbate.png'),'')
     utils.addDir('[COLOR hotpink]MyFreeCams[/COLOR] [COLOR white]- webcams[/COLOR]','https://www.myfreecams.com',270,os.path.join(imgDir, 'myfreecams.jpg'),'')
     utils.addDir('[COLOR hotpink]Cam4[/COLOR] [COLOR white]- webcams[/COLOR]','http://www.cam4.com',280,os.path.join(imgDir, 'cam4.png'),'')    
+    utils.addDir('[COLOR hotpink]Camsoda[/COLOR] [COLOR white]- webcams[/COLOR]','http://www.camsoda.com',475,os.path.join(imgDir, 'camsoda.png'),'')    
+    utils.addDir('[COLOR hotpink]naked.com[/COLOR] [COLOR white]- webcams[/COLOR]','http://www.naked.com',480,os.path.join(imgDir, 'naked.png'),'')    
     utils.addDir('[COLOR hotpink]Streams[/COLOR] [COLOR white]- beta[/COLOR]','',8,'','')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    xbmcplugin.endOfDirectory(utils.addon_handle, cacheToDisc=False)
+    
+def INDEXH():
+    utils.addDir('[COLOR hotpink]Hentaicraving[/COLOR]','http://www.hentaicraving.com/?genre=Uncensored',30,os.path.join(imgDir, 'hc.jpg'),'')
+    utils.addDir('[COLOR hotpink]Hentaihaven[/COLOR]','http://hentaihaven.org/?sort=date',460,os.path.join(imgDir, 'hh.png'),'')
+    xbmcplugin.endOfDirectory(utils.addon_handle, cacheToDisc=False)    
     
 def STREAMS():
     streamurl = 'http://bit.ly/uwcstreams'
@@ -211,8 +217,9 @@ else:
 
 if age:
     if mode is None: INDEX()
-    elif mode == 2: INDEXS()
-    elif mode == 3: INDEXM()
+    elif mode == 1: INDEXS()
+    elif mode == 2: INDEXM()
+    elif mode == 3: INDEXH()    
     elif mode == 4: xbmc.executebuiltin('ActivateWindow(Videos, '+url+')')
 
     elif mode == 5: ONELIST(page)
@@ -504,6 +511,24 @@ if age:
     elif mode == 452: sexix.Playvid(url, name, download)
     elif mode == 453: sexix.Categories(url)
     elif mode == 454: sexix.Search(url, keyword)
+    elif mode == 460: hentaihaven.Main()
+    elif mode == 461: hentaihaven.List(url)
+    elif mode == 462: hentaihaven.Playvid(url, name, download)
+    elif mode == 463: hentaihaven.Categories(url)
+    elif mode == 464: hentaihaven.A2Z(url)    
+    elif mode == 470: pornkinox.Main()
+    elif mode == 471: pornkinox.List(url)
+    elif mode == 472: pornkinox.Playvid(url, name, download)
+    elif mode == 473: pornkinox.Search(url, keyword)
+    elif mode == 474: pornkinox.Categories(url)
+    elif mode == 475: camsoda.Main()
+    elif mode == 476: camsoda.List(url)
+    elif mode == 478: camsoda.Playvid(url, name)
+    elif mode == 479: camsoda.clean_database(True)
+    elif mode == 480: naked.Main()
+    elif mode == 481: naked.List(url)
+    elif mode == 482: naked.Playvid(url, name)
+    elif mode == 483: naked.clean_database(True)
 
     elif mode == 900: favorites.Favorites(fav,favmode,name,url,img)
     elif mode == 901: favorites.List()

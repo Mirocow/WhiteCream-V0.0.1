@@ -66,5 +66,5 @@ def YFTCat(url):
 
 
 def YFTPlayvid(url, name, download=None):
-    utils.PLAYVIDEO(url, name, download)
+    utils.playVideoByUrl(url, name, download)
 

@@ -460,7 +460,7 @@ Changed: Few site logo resizes
 
 
 [B]Version 1.0.48[/B]
-Fixed: Videomega playback due to refactoring playvideo()
+Fixed: Videomega playback due to refactoring playVideoBySource()
 Added: javHDonline (credits to Fr33m1nd)
 Added: YourFreeTube
 

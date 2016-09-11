@@ -43,7 +43,7 @@ def List(url):
 
 
 def Playvid(url, name, download):
-    utils.PLAYVIDEO(url, name, download)
+    utils.playVideoByUrl(url, name, download)
 
 
 def Categories(url):

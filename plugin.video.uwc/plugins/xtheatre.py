@@ -90,7 +90,7 @@ def List(url, page):
         return False
 
 def Video(url, name, download):
-    utils.PLAYVIDEO(url, name, download)
+    utils.playVideoByUrl(url, name, download)
     return True
 
 def SortMethod():

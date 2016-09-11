@@ -90,7 +90,7 @@ def PPlayvid(url, name, alternative=1, download=None):
     videopage = utils.getHtml(url, '', '', True)
     if 'openload' in videopage:
         progress.close()
-        utils.PLAYVIDEO(url, name, download)
+        utils.playVideoByUrl(url, name, download)
     elif re.search('server/\?t=', videopage, re.DOTALL | re.IGNORECASE):
         match = re.compile(r'/server/\?t=([^"]+)', re.DOTALL | re.IGNORECASE).findall(videopage)
         match = "http://www.porn00.org/server/?t=" + match[0]

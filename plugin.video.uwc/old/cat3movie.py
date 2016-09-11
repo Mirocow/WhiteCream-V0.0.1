@@ -78,4 +78,4 @@ def Playvid(url, name, download=None):
                     base64str = re.compile(r'Base64\.decode\("([^"]+)"').findall(html)
                     url = url + " " + base64.b64decode(base64str[0])
             except: pass
-    utils.playvideo(url, name, download, url)
+    utils.playVideoBySource(url, name, download, url)

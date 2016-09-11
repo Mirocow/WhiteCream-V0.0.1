@@ -108,7 +108,7 @@ def List(url, page, onelist=None):
 
 
 def Video(url, name, download):
-    utils.PLAYVIDEO(url, name, download)
+    utils.playVideoByUrl(url, name, download)
     return True
 
 

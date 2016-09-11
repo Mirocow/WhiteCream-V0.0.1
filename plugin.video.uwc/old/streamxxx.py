@@ -101,4 +101,4 @@ def Tags(url):
 
 
 def Playvid(url, name, download=None):
-    utils.PLAYVIDEO(url, name, download)
+    utils.playVideoByUrl(url, name, download)

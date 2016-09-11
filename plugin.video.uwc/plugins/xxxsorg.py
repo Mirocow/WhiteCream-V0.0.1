@@ -78,7 +78,7 @@ def Playvid(url, name, download):
         if 'securely' in link:
             link = utils.getVideoLink(link, url)
         videourls = videourls + " " + link
-    utils.playvideo(videourls, name, download, url)
+    utils.playVideoBySource(videourls, name, download, url)
  
  
 def Categories(url):

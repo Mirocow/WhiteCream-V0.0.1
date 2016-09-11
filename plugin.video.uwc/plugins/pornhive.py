@@ -102,7 +102,7 @@ def PHVideo(url, name, download=None):
     elif "lash" in sitename:
         progress.update( 30, "", "Getting FlashX", "" )
         progress.close()
-        utils.PLAYVIDEO(outurl, name, download)
+        utils.playVideoByUrl(outurl, name, download)
         return
     elif sitename == "NowVideo" or sitename == "www.nowvideo.sx":
         progress.update( 30, "", "Getting NowVideo", "" )
@@ -110,39 +110,39 @@ def PHVideo(url, name, download=None):
     elif "penload" in sitename:
         progress.update( 30, "", "Getting Openload", "" )
         outurl1 = utils.getVideoLink(outurl, '')
-        utils.playvideo(outurl1, name, download, outurl)
+        utils.playVideoBySource(outurl1, name, download, outurl)
         return
     elif "videowood" in sitename:
         progress.update( 30, "", "Getting Videowood", "" )
         progress.close()
-        utils.PLAYVIDEO(outurl, name, download)
+        utils.playVideoByUrl(outurl, name, download)
         return
     elif "gr8movies" in sitename:
         progress.update( 30, "", "Getting Gr8movies", "" )
         progress.close()
-        utils.PLAYVIDEO(outurl, name, download)
+        utils.playVideoByUrl(outurl, name, download)
         return
     elif "freeforumzone" in sitename:
         progress.update( 30, "", "Getting pornoworld", "" )
         progress.close()
-        utils.PLAYVIDEO(outurl, name, download)
+        utils.playVideoByUrl(outurl, name, download)
         return        
     elif "streamin" in sitename:
         progress.update( 30, "", "Getting Streamin", "" )
         streaming = utils.getHtml(outurl, '')
         outurl=re.compile("action='([^']+)'").findall(streaming)[0]
         progress.close()
-        utils.playvideo(outurl, name, download, outurl)
+        utils.playVideoBySource(outurl, name, download, outurl)
         return
     elif 'keeplinks' in sitename:
         progress.update( 30, "", "Getting Keeplinks", "" )
         outurl2 = getKeeplinks(outurl)
-        utils.playvideo(outurl2, name, download, outurl)
+        utils.playVideoBySource(outurl2, name, download, outurl)
         return
     elif "datoporn" in sitename:
         progress.update( 30, "", "Getting Datoporn", "" )
         outurl1 = utils.getVideoLink(outurl, '')
-        utils.playvideo(outurl1, name, download, outurl)
+        utils.playVideoBySource(outurl1, name, download, outurl)
         return        
     else:
         progress.close()

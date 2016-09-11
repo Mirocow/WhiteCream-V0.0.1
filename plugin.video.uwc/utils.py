@@ -28,7 +28,7 @@ __scriptname__ = "Ultimate Whitecream"
 __author__ = "mortael"
 __scriptid__ = "plugin.video.uwc"
 __credits__ = "mortael, Fr33m1nd, anton40, NothingGnome, Mirocow"
-__version__ = "1.1.35"
+__version__ = "2.0.00"
 
 USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
 headers = {'User-Agent': USER_AGENT,'Accept': '*/*','Connection': 'keep-alive'}
@@ -300,14 +300,14 @@ def notify(header=None, msg='', duration=5000):
     xbmc.executebuiltin(builtin)
 
 
-def PLAYVIDEO(url, name, download=None):
+def playVideoByUrl(url, name, download=None):
     progress.create('Play video', 'Searching videofile.')
     progress.update( 10, "", "Loading video page", "" )
     videosource = getHtml(url, url)
-    playvideo(videosource, name, download, url)
+    playVideoBySource(videosource, name, download, url)
 
 
-def playvideo(videosource, name, download=None, url=None):
+def playVideoBySource(videosource, name, download=None, url=None):
     hosts = []
 
     if re.search('videomega\.tv/', videosource, re.DOTALL | re.IGNORECASE):
@@ -335,12 +335,13 @@ def playvideo(videosource, name, download=None, url=None):
     if re.search('datoporn.com', videosource, re.DOTALL | re.IGNORECASE):
         hosts.append('Datoporn')
     if re.search('<source', videosource, re.DOTALL | re.IGNORECASE):
-        hosts.append('Direct Source')        
+        hosts.append('Direct Source')
     if not 'keeplinks' in url:
         if re.search('keeplinks\.eu/p', videosource, re.DOTALL | re.IGNORECASE):
-            hosts.append('Keeplinks <--') 
+            hosts.append('Keeplinks <--')
     if re.search('filecrypt.cc/Container', videosource, re.DOTALL | re.IGNORECASE):
-        hosts.append('Filecrypt')              
+        hosts.append('Filecrypt')
+
     if len(hosts) == 0:
         progress.close()
         notify('Oh oh','Couldn\'t find any video')
@@ -451,6 +452,7 @@ def playvideo(videosource, name, download=None, url=None):
         try: flashxujs = unpack(flashxjs[1])
         except: flashxujs = flashxjs[1]
         videourl = re.compile('file:"([^"]+)"', re.DOTALL | re.IGNORECASE).findall(flashxujs)[0]
+
     elif vidhost == 'Mega3X':
         progress.update( 40, "", "Loading Mega3X", "" )
         mega3xurl = re.compile(r"(https?://(?:www\.)?mega3x.net/(?:embed-)?(?:[0-9a-zA-Z]+).html)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -461,6 +463,7 @@ def playvideo(videosource, name, download=None, url=None):
         mega3xujs = unpack(mega3xjs[0])
         videourl = re.compile('file:\s?"([^"]+m3u8)"', re.DOTALL | re.IGNORECASE).findall(mega3xujs)
         videourl = videourl[0]
+
     elif vidhost == 'Datoporn':
         progress.update( 40, "", "Loading Datoporn", "" )
         datourl = re.compile(r"//(?:www\.)?datoporn\.com/(?:embed-)?([0-9a-zA-Z]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -472,6 +475,7 @@ def playvideo(videosource, name, download=None, url=None):
         datoujs = unpack(datojs[0])
         videourl = re.compile('file:"([^"]+mp4)"', re.DOTALL | re.IGNORECASE).findall(datoujs)
         videourl = videourl[0]          
+
     elif vidhost == 'StreamCloud':
         progress.update( 40, "", "Opening Streamcloud", "" )
         streamcloudurl = re.compile(r"//(?:www\.)?streamcloud\.eu?/([0-9a-zA-Z-_/.]+html)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -486,6 +490,7 @@ def playvideo(videosource, name, download=None, url=None):
         progress.update( 60, "", "Grabbing video file", "" )    
         newscpage = postHtml(streamcloudurl, form_data=form_values)
         videourl = re.compile('file:\s*"(.+?)",', re.DOTALL | re.IGNORECASE).findall(newscpage)[0]
+
     elif vidhost == 'Jetload':
         progress.update( 40, "", "Loading Jetload", "" )
         jlurl = re.compile(r'jetload\.tv/([^"]+)', re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -503,6 +508,7 @@ def playvideo(videosource, name, download=None, url=None):
         vwsrc = getHtml(vwurl, url)
         progress.update( 80, "", "Getting video file from Videowood", "" )
         videourl = videowood(vwsrc)
+
     elif vidhost == 'Keeplinks <--':
         progress.update( 40, "", "Loading Keeplinks", "" )
         klurl = re.compile(r"//(?:www\.)?keeplinks\.eu/p([0-9a-zA-Z/]+)", re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -518,8 +524,9 @@ def playvideo(videosource, name, download=None, url=None):
            'Connection': 'keep-alive',
            'Cookie': 'flag['+kllinkid+'] = 1;'} 
         klpage = getHtml(kllink, klurl, klheader)
-        playvideo(klpage, name, download, klurl)
+        playVideoBySource(klpage, name, download, klurl)
         return
+
     elif vidhost == 'Streamdefence':
         progress.update( 40, "", "Loading Streamdefence", "" )
         sdurl = re.compile(r'streamdefence\.com/view.php\?ref=([^"]+)"', re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -528,8 +535,9 @@ def playvideo(videosource, name, download=None, url=None):
         sdsrc = getHtml(sdurl, url)
         progress.update( 80, "", "Getting video file from Streamdefence", "" )
         sdpage = streamdefence(sdsrc)
-        playvideo(sdpage, name, download, sdurl)
+        playVideoBySource(sdpage, name, download, sdurl)
         return
+
     elif vidhost == 'Filecrypt':
         progress.update( 40, "", "Loading Filecrypt", "" )
         fcurl = re.compile(r'filecrypt\.cc/Container/([^\.]+)\.html', re.DOTALL | re.IGNORECASE).findall(videosource)
@@ -549,13 +557,15 @@ def playvideo(videosource, name, download=None, url=None):
                     fcurls = fcurls + " " + fcurl2
                 except:
                     pass
-        playvideo(fcurls, name, download, fcurl)
+        playVideoBySource(fcurls, name, download, fcurl)
         return
+
     elif vidhost == 'Direct Source':
         progress.update( 40, "", "Loading Direct source", "" )
         dsurl = re.compile("""<source.*?src=(?:"|')([^"']+)[^>]+>""", re.DOTALL | re.IGNORECASE).findall(videosource)
         dsurl = chkmultivids(dsurl)
         videourl = dsurl        
+
     progress.close()
     playvid(videourl, name, download)
 

@@ -1,7 +1,7 @@
 WhiteCream
 =================
 
-Adult Channels
+Plugin for Kodi/XBMC Player (Adult Channels)
 
 
 # Using

@@ -116,22 +116,6 @@ def List(url, page=None):
     xbmcplugin.endOfDirectory(utils.addon_handle)
 
 
-def clean_database(showdialog=False):
-    conn = sqlite3.connect(xbmc.translatePath("special://database/Textures13.db"))
-    try:
-        with conn:
-            list = conn.execute("SELECT id, cachedurl FROM texture WHERE url LIKE '%%%s%%';" % ".highwebmedia.com")
-            for row in list:
-                conn.execute("DELETE FROM sizes WHERE idtexture LIKE '%s';" % row[0])
-                try: os.remove(xbmc.translatePath("special://thumbnails/" + row[1]))
-                except: pass
-            conn.execute("DELETE FROM texture WHERE url LIKE '%%%s%%';" % ".highwebmedia.com")
-            if showdialog:
-                utils.notify('Finished','Chaturbate images cleared')
-    except:
-        pass
-
-
 def Playvid(url, name):
     listhtml = utils.getHtml2(url)
     match = re.compile("<video.*?src='([^']+)'", re.DOTALL | re.IGNORECASE).findall(listhtml)

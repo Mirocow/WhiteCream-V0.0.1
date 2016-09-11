@@ -16,21 +16,30 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
- 
+
 import urllib, urllib2, re, cookielib, os.path, sys, socket
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
  
-import utils
+import utils, search
 
 progress = utils.progress
- 
+
+def init(route):
+    route.add(1, '[COLOR hotpink]XXX Streams (org)[/COLOR]','http://xxxstreams.org/',420,'xxxsorg.png','')
+
+    route.add(420, '[COLOR hotpink]Categories[/COLOR]','http://xxxstreams.org/',423,'','')
+    route.add(420, '[COLOR hotpink]Search[/COLOR]','http://xxxstreams.org/?s=',424,'','')
+    route.add(420, '', '', {'plugin': 'xxxsorg', 'call': 'Main'})
+
+    route.add(421, '', '', {'plugin': 'xxxsorg', 'call': 'List', 'params': ['url']})
+    route.add(422, '', '', {'plugin': 'xxxsorg', 'call': 'Playvid', 'params': ['url', 'name', 'download']})
+    route.add(423, '', '', {'plugin': 'xxxsorg', 'call': 'Categories', 'params': ['url']})
+    route.add(424, '', '', {'plugin': 'xxxsorg', 'call': 'Search', 'params': ['route', 'url', 'keyword']})
+    route.add(425, '', '', {'plugin': 'xxxsorg', 'call': 'ListSearch', 'params': ['url']})
  
 def Main():
-    utils.addDir('[COLOR hotpink]Categories[/COLOR]','http://xxxstreams.org/',423,'','')
-    utils.addDir('[COLOR hotpink]Search[/COLOR]','http://xxxstreams.org/?s=',424,'','')
-    List('http://xxxstreams.org/page/1')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
- 
+    return List('http://xxxstreams.org/page/1')
+
  
 def List(url):
     html = utils.getHtml(url, '')
@@ -42,7 +51,8 @@ def List(url):
         nextp = re.compile('<a class="next.*?href="(.+?)">', re.DOTALL | re.IGNORECASE).findall(html)
         utils.addDir('Next Page', nextp[0], 421,'')
     except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+
+    return False
 
 def ListSearch(url):
     html = utils.getHtml(url, '').replace('\n','')
@@ -54,7 +64,7 @@ def ListSearch(url):
         nextp = re.compile('<link rel="next" href="(.+?)" />', re.DOTALL | re.IGNORECASE).findall(html)
         utils.addDir('Next Page', nextp[0], 425,'')
     except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 def Playvid(url, name, download):
     progress.create('Play video', 'Searching videofile.')
@@ -76,13 +86,13 @@ def Categories(url):
     match = re.compile('<li.+?class=".+?menu-item-object-post_tag.+?"><a href="(.+?)">(.+?)</a></li>').findall(cathtml)
     for catpage, name in match:
         utils.addDir(name, catpage, 421, '')    
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
  
-def Search(url, keyword=None):
+def Search(route, url, keyword=None):
     searchUrl = url
     if not keyword:
-        utils.searchDir(url, 424)
+        return search.searchDir(route, url, 424)
     else:
         title = keyword.replace(' ','+')
         searchUrl = searchUrl + title
-        ListSearch(searchUrl)
+        return ListSearch(searchUrl)

@@ -18,12 +18,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket, time, tempfile, string
+import urllib, urllib2, re, cookielib, os.path, sys, socket, time, tempfile
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon, sqlite3, urlparse, xbmcvfs, base64
-
 from jsunpack import unpack
-
-
 from StringIO import StringIO
 import gzip
 
@@ -34,11 +31,7 @@ __credits__ = "mortael, Fr33m1nd, anton40, NothingGnome, Mirocow"
 __version__ = "1.1.35"
 
 USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
-
-headers = {'User-Agent': USER_AGENT,
-           'Accept': '*/*',
-           'Connection': 'keep-alive'}
-           
+headers = {'User-Agent': USER_AGENT,'Accept': '*/*','Connection': 'keep-alive'}
 openloadhdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
        'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
@@ -828,7 +821,6 @@ def decodeAA(aastring):
     return decodestring
 
 
-
 def decode(encoded):
     s = []
     for octc in (c for c in re.findall(r'\\(\d{2,3})', encoded)):
@@ -914,48 +906,26 @@ def streamdefence(html):
     else:
         decoded = base64.b64decode(html)
     return streamdefence(decoded)
-        
-        
-def searchDir(url, mode, page=None):
-    conn = sqlite3.connect(favoritesdb)
-    c = conn.cursor()
-    try:
-        c.execute("SELECT * FROM keywords")
-        for (keyword,) in c.fetchall():
-            name = '[COLOR deeppink]' + urllib.unquote_plus(keyword) + '[/COLOR]'
-            addDir(name, url, mode, '', page=page, keyword=keyword)
-
-    except: pass
-    addDir('[COLOR hotpink]Add Keyword[/COLOR]', url, 902, '', '', mode, Folder=False)
-    addDir('[COLOR hotpink]Clear list[/COLOR]', '', 903, '', Folder=False)
-    xbmcplugin.endOfDirectory(addon_handle)
 
 
-def newSearch(url, mode):
-    vq = _get_keyboard(heading="Searching for...")
-    if (not vq): return False, 0
-    title = urllib.quote_plus(vq)
-    addKeyword(title)
-    xbmc.executebuiltin('Container.Refresh')
+class switch(object):
+    def __init__(self, value):
+        self.value = value  # значение, которое будем искать
+        self.fall = False   # для пустых case блоков
 
+    def __iter__(self):     # для использования в цикле for
+        """ Возвращает один раз метод match и завершается """
+        yield self.match
+        raise StopIteration
 
-def clearSearch():
-    delKeyword()
-    xbmc.executebuiltin('Container.Refresh')
-
-
-def addKeyword(keyword):
-    xbmc.log(keyword)
-    conn = sqlite3.connect(favoritesdb)
-    c = conn.cursor()
-    c.execute("INSERT INTO keywords VALUES (?)", (keyword,))
-    conn.commit()
-    conn.close()
-
-
-def delKeyword():
-    conn = sqlite3.connect(favoritesdb)
-    c = conn.cursor()
-    c.execute("DELETE FROM keywords;")
-    conn.commit()
-    conn.close()
+    def match(self, *args):
+        """ Указывает, нужно ли заходить в тестовый вариант """
+        if self.fall or not args:
+            # пустой список аргументов означает последний блок case
+            # fall означает, что ранее сработало условие и нужно заходить
+            #   в каждый case до первого break
+            return True
+        elif self.value in args:
+            self.fall = True
+            return True
+        return False

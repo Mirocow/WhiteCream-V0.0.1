@@ -1,3 +1,5 @@
+#-*- coding: utf-8 -*-
+
 '''
     Ultimate Whitecream
     Copyright (C) 2015 mortael
@@ -16,18 +18,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon, sqlite3
-
+import xbmc, xbmcplugin, sqlite3
 import utils
-
-from chaturbate import clean_database as cleanchat
-from cam4 import clean_database as cleancam4
 
 dialog = utils.dialog
 favoritesdb = utils.favoritesdb
-
-
 
 conn = sqlite3.connect(favoritesdb)
 c = conn.cursor()
@@ -38,11 +33,12 @@ except:
     pass
 conn.close()
 
+def init(route):
+    route.add(900, '', '', {'plugin': 'favorites', 'call': 'Favorites', 'params': ['fav', 'favmode', 'name', 'url', 'img']})
+    route.add(901, '', '', {'plugin': 'favorites', 'call': 'List'})
+
 
 def List():
-    if utils.addon.getSetting("chaturbate") == "true":
-        cleanchat()
-        cleancam4()
     conn = sqlite3.connect(favoritesdb)
     conn.text_factory = str
     c = conn.cursor()

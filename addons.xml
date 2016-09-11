@@ -2,8 +2,8 @@
 <addons>
 <addon id="plugin.video.uwc"
        name="Ultimate Whitecream"
-       version="1.1.35"
-       provider-name="mortael">
+       version="2.0.00"
+       provider-name="mortael, mirocow">
     <requires>
         <import addon="xbmc.python" version="2.1.0"/>
     </requires>

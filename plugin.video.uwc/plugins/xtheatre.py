@@ -1,6 +1,6 @@
 '''
     Ultimate Whitecream
-    Copyright (C) 2015 mortael
+    Copyright (C) 2015 mortael, mirocow
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,47 +18,59 @@
 
 import urllib, urllib2, re, cookielib, os.path, sys, socket
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-
-import utils
+import utils, search
 
 addon = utils.addon
 
 sortlistxt = [addon.getLocalizedString(30022), addon.getLocalizedString(30023), addon.getLocalizedString(30024),
             addon.getLocalizedString(30025)]   
 
+def init(route):
+    route.add(2, '[COLOR hotpink]Xtheatre[/COLOR]','http://xtheatre.net/page/1/',20,'xt.png','')
 
-def XTMain():
-    utils.addDir('[COLOR hotpink]Categories[/COLOR]','http://xtheatre.net/categories/',22,'','')
-    utils.addDir('[COLOR hotpink]Search[/COLOR]','http://xtheatre.net/page/1/?s=',24,'','')
-    Sort = '[COLOR hotpink]Current sort:[/COLOR] ' + sortlistxt[int(addon.getSetting("sortxt"))]
-    utils.addDir(Sort, '', 25, '', '')    
-    XTList('http://xtheatre.net/category/movies/page/1/',1)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    route.add(20, '[COLOR hotpink]Categories[/COLOR]','http://xtheatre.net/categories/',22,'','')
+    route.add(20, '[COLOR hotpink]Search[/COLOR]','http://xtheatre.net/page/1/?s=',24,'','')
+    route.add(20, '[COLOR hotpink]Current sort:[/COLOR] ' + sortlistxt[int(addon.getSetting("sortxt"))], '', 25, '', '')
+    route.add(20, '', '', {'plugin': 'xtheatre', 'call': 'Main'})
+
+    route.add(21, '', '', {'plugin': 'xtheatre', 'call': 'List', 'params': ['url', 'page']})
+    route.add(22, '', '', {'plugin': 'xtheatre', 'call': 'Cat', 'params': ['url']})
+    route.add(23, '', '', {'plugin': 'xtheatre', 'call': 'Video', 'params': ['url', 'name', 'download']})
+    route.add(24, '', '', {'plugin': 'xtheatre', 'call': 'Search', 'params': ['route', 'url', 'keyword']})
+    route.add(25, '', '', {'plugin': 'xtheatre', 'call': 'Settings', 'params': ['route']})
+
+def Settings(route):
+    addon.openSettings()
+    Main(route)
 
 
-def XTCat(url):
+def Main():
+    return List('http://xtheatre.net/category/movies/page/1/',1)
+
+
+def Cat(url):
     cathtml = utils.getHtml(url, '')
     match = re.compile('src="([^"]+)"[^<]+</noscript>.*?<a href="([^"]+)"[^<]+<span>([^<]+)</s.*?">([^<]+)', re.DOTALL | re.IGNORECASE).findall(cathtml)
     for img, catpage, name, videos in match:
         catpage = catpage + 'page/1/'
         name = name + ' [COLOR deeppink]' + videos + '[/COLOR]'
         utils.addDir(name, catpage, 21, img, 1)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
     
     
-def XTSearch(url, keyword=None):
+def Search(url, keyword=None):
     searchUrl = url
     if not keyword:
-        utils.searchDir(url, 24)
+        return search.searchDir(url, 24)
     else:
         title = keyword.replace(' ','+')
         searchUrl = searchUrl + title
         print "Searching URL: " + searchUrl
-        XTList(searchUrl, 1)
+        return List(searchUrl, 1)
 
 
-def XTList(url, page):
-    sort = getXTSortMethod()
+def List(url, page):
+    sort = SortMethod()
     if re.search('\?', url, re.DOTALL | re.IGNORECASE):
         url = url + '&filtre=' + sort + '&display=extract'
     else:
@@ -70,16 +82,18 @@ def XTList(url, page):
         name = utils.cleantext(name)
         desc = utils.cleantext(desc)
         utils.addDownLink(name, videopage, 23, img, desc)
+
     if re.search('<link rel="next"', listhtml, re.DOTALL | re.IGNORECASE):
         npage = page + 1        
         url = url.replace('/page/'+str(page)+'/','/page/'+str(npage)+'/')
         utils.addDir('Next Page ('+str(npage)+')', url, 21, '', npage)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+        return False
 
-def XTVideo(url, name, download):
+def Video(url, name, download):
     utils.PLAYVIDEO(url, name, download)
-    
-def getXTSortMethod():
+    return True
+
+def SortMethod():
     sortoptions = {0: 'date',
                    1: 'title',
                    2: 'views',

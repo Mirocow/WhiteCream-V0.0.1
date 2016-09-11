@@ -1,4 +1,4 @@
-WhiteCream-V0.0.2
+WhiteCream
 =================
 
 Adult Channels

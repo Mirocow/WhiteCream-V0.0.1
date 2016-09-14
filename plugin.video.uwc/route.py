@@ -1,5 +1,3 @@
-#-*- coding: utf-8 -*-
-
 '''
     Ultimate Whitecream
     Copyright (C) 2015 mortael

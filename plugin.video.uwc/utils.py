@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 '''
     Ultimate Whitecream
@@ -18,17 +18,33 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket, time, tempfile, string
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon, sqlite3, urlparse, xbmcvfs, base64
-from jsunpack import unpack
-from StringIO import StringIO
-import gzip
-
 __scriptname__ = "Ultimate Whitecream"
 __author__ = "mortael"
 __scriptid__ = "plugin.video.uwc"
 __credits__ = "mortael, Fr33m1nd, anton40, NothingGnome, Mirocow"
-__version__ = "2.0.00"
+__version__ = "2.0.01"
+
+import urllib
+import urllib2
+import re
+import cookielib
+import os.path
+import sys
+import time
+import tempfile
+import sqlite3
+import urlparse
+import base64
+from StringIO import StringIO
+import gzip
+
+import xbmc
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+import xbmcvfs
+import cloudflare
+from jsunpack import unpack
 
 USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
 
@@ -66,13 +82,13 @@ if not os.path.exists(profileDir):
     os.makedirs(profileDir)
 
 urlopen = urllib2.urlopen
-cj = cookielib.LWPCookieJar()
+cj = cookielib.LWPCookieJar(xbmc.translatePath(cookiePath))
 Request = urllib2.Request
 
 if cj != None:
     if os.path.isfile(xbmc.translatePath(cookiePath)):
         try:
-            cj.load(xbmc.translatePath(cookiePath))
+            cj.load()
         except:
             try:
                 os.remove(xbmc.translatePath(cookiePath))
@@ -80,7 +96,8 @@ if cj != None:
             except:
                 dialog.ok('Oh oh', 'The Cookie file is locked, please restart Kodi')
                 pass
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    cookie_handler = urllib2.HTTPCookieProcessor(cj)
+    opener = urllib2.build_opener(cookie_handler, urllib2.HTTPBasicAuthHandler(), urllib2.HTTPHandler())
 else:
     opener = urllib2.build_opener()
 
@@ -321,7 +338,6 @@ def playVideoByUrl(url, name, download=None):
 
 def playVideoBySource(videosource, name, download=None, url=None):
     hosts = []
-
     if re.search('videomega\.tv/', videosource, re.DOTALL | re.IGNORECASE):
         hosts.append('VideoMega')
     if re.search('megavideo\.pro/', videosource, re.DOTALL | re.IGNORECASE):
@@ -353,7 +369,6 @@ def playVideoBySource(videosource, name, download=None, url=None):
             hosts.append('Keeplinks <--')
     if re.search('filecrypt.cc/Container', videosource, re.DOTALL | re.IGNORECASE):
         hosts.append('Filecrypt')
-
     if len(hosts) == 0:
         progress.close()
         notify('Oh oh', 'Couldn\'t find any video')
@@ -389,7 +404,6 @@ def playVideoBySource(videosource, name, download=None, url=None):
             hashkey = chkmultivids(hashkey)
             hashpage = getHtml('http://videomega.tv/validatehash.php?hashkey=' + hashkey, url)
             hashref = re.compile('ref="([^"]+)', re.DOTALL | re.IGNORECASE).findall(hashpage)
-
         progress.update(80, "", "Getting video file from Videomega", "")
         vmhost = 'http://videomega.tv/view.php?ref=' + hashref[0]
         videopage = getHtml(vmhost, url)
@@ -410,7 +424,13 @@ def playVideoBySource(videosource, name, download=None, url=None):
         try:
             openloadsrc = getHtml(openloadurl1, '', openloadhdr)
             progress.update(80, "", "Getting video file from OpenLoad", "")
+            if 'We are sorry!' in openloadsrc:
+                notify('Oh oh', 'Video is deleted from Openload')
+                return
             videourl = decodeOpenLoad(openloadsrc)
+            if 'pigeons' in videourl:
+                notify('Oh oh', 'Pigeons, Pigeons, Pigeons!')
+                return
             videourl = videourl + '|Referer=' + openloadurl1 + '&User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
         except:
             notify('Oh oh', 'Couldn\'t find playable OpenLoad link')
@@ -626,30 +646,34 @@ def PlayStream(name, url):
 
 
 def getHtml(url, referer='', hdr=None, NoCookie=None, data=None):
-    if not hdr:
-        req = Request(url, data, headers)
-    else:
-        req = Request(url, data, hdr)
-    if len(referer) > 1:
-        req.add_header('Referer', referer)
-    if data:
-        req.add_header('Content-Length', len(data))
-
-    response = urlopen(req, timeout=60)
-    if response.info().get('Content-Encoding') == 'gzip':
-        buf = StringIO(response.read())
-        f = gzip.GzipFile(fileobj=buf)
-        data = f.read()
-        f.close()
-    else:
-        data = response.read()
-    if not NoCookie:
-        # Cope with problematic timestamp values on RPi on OpenElec 4.2.1
-        try:
-            cj.save(cookiePath)
-        except:
-            pass
-    response.close()
+    try:
+        if not hdr:
+            req = Request(url, data, headers)
+        else:
+            req = Request(url, data, hdr)
+        if len(referer) > 1:
+            req.add_header('Referer', referer)
+        if data:
+            req.add_header('Content-Length', len(data))
+        response = urlopen(req, timeout=60)
+        if response.info().get('Content-Encoding') == 'gzip':
+            buf = StringIO(response.read())
+            f = gzip.GzipFile(fileobj=buf)
+            data = f.read()
+            f.close()
+        else:
+            data = response.read()
+        if not NoCookie:
+            # Cope with problematic timestamp values on RPi on OpenElec 4.2.1
+            try:
+                cj.save(cookiePath)
+            except:
+                pass
+        response.close()
+    except urllib2.HTTPError as e:
+        data = e.read()
+        if e.code == 503 and 'cf-browser-verification' in data:
+            data = cloudflare.solve(url, cj, USER_AGENT)
     return data
 
 
@@ -706,6 +730,34 @@ def cleantext(text):
     text = text.replace('&amp;', '&')
     text = text.replace('&ntilde;', 'ñ')
     return text
+
+
+def cleanse_title(text):
+    def fixup(m):
+        text = m.group(0)
+        if text[:2] == "&#":
+            # character reference
+            try:
+                if text[:3] == "&#x":
+                    return unichr(int(text[3:-1], 16))
+                else:
+                    return unichr(int(text[2:-1]))
+            except ValueError:
+                pass
+        else:
+            # named entity
+            try:
+                text = unichr(htmlentitydefs.name2codepoint[text[1:-1]])
+            except KeyError:
+                pass
+        return text
+
+    if isinstance(text, str):
+        try:
+            text = text.decode('utf-8')
+        except:
+            pass
+    return re.sub("&#?\w+;", fixup, text.strip())
 
 
 def addDownLink(name, url, mode, iconimage, desc, stream=None, fav='add', noDownload=False):
@@ -789,8 +841,6 @@ def decodeOpenLoad(html):
     # fixed by the openload guy ;)  based on work by pitoosie
     from HTMLParser import HTMLParser
     from jjdecode import JJDecoder
-    hiddenurl = HTMLParser().unescape(
-        re.search("</span>[^>]+>([^<]+).*?streamurl", html, re.DOTALL | re.IGNORECASE).group(1))
 
     jjstring = re.compile('a="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(html)[1]
     shiftint = re.compile(r";\}\((\d+)\)", re.DOTALL | re.IGNORECASE).findall(html)[1]
@@ -815,7 +865,12 @@ def decodeOpenLoad(html):
     jjstring = jjstring.replace('2', '__')
     jjstring = jjstring.replace('3', '___')
     jjstring = JJDecoder(jjstring).decode()
+
     magicnumber = re.compile(r"charCodeAt\(\d+?\)\s*?\+\s*?(\d+?)\)", re.DOTALL | re.IGNORECASE).findall(jjstring)[0]
+    hiddenid = re.compile(r'=\s*?\$\("#([^"]+)"', re.DOTALL | re.IGNORECASE).findall(jjstring)[0]
+
+    hiddenurl = HTMLParser().unescape(
+        re.compile(r'<span id="' + hiddenid + '">([^<]+)</span', re.DOTALL | re.IGNORECASE).findall(html)[0])
 
     s = []
     for idx, i in enumerate(hiddenurl):
@@ -836,8 +891,13 @@ def decodeOpenLoad(html):
     res = urllib2.urlopen(req)
     videourl = res.geturl()
     res.close()
-    if 'pigeons.mp4' in videourl.lower():
-        return
+
+    # doesnt work
+    filename = re.compile('tion" content="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(html)[0]
+    filename = urllib.quote_plus(cleanse_title(filename))
+
+    if filename in videourl:
+        return videourl
     else:
         return videourl
 
@@ -963,6 +1023,56 @@ def streamdefence(html):
     else:
         decoded = base64.b64decode(html)
     return streamdefence(decoded)
+
+
+def searchDir(url, mode, page=None):
+    conn = sqlite3.connect(favoritesdb)
+    c = conn.cursor()
+    try:
+        c.execute("SELECT * FROM keywords")
+        for (keyword,) in c.fetchall():
+            name = '[COLOR deeppink]' + urllib.unquote_plus(keyword) + '[/COLOR]'
+            addDir(name, url, mode, '', page=page, keyword=keyword)
+    except:
+        pass
+    addDir('[COLOR hotpink]Add Keyword[/COLOR]', url, 902, '', '', mode, Folder=False)
+    addDir('[COLOR hotpink]Clear list[/COLOR]', '', 903, '', Folder=False)
+    xbmcplugin.endOfDirectory(addon_handle)
+
+
+def newSearch(url, mode):
+    vq = _get_keyboard(heading="Searching for...")
+    if (not vq): return False, 0
+    title = urllib.quote_plus(vq)
+    addKeyword(title)
+    xbmc.executebuiltin('Container.Refresh')
+    # searchcmd = (sys.argv[0] +
+    #     "?url=" + urllib.quote_plus(url) +
+    #     "&mode=" + str(mode) +
+    #     "&keyword=" + urllib.quote_plus(title))
+    # xbmc.executebuiltin('xbmc.RunPlugin('+searchcmd+')')
+
+
+def clearSearch():
+    delKeyword()
+    xbmc.executebuiltin('Container.Refresh')
+
+
+def addKeyword(keyword):
+    xbmc.log(keyword)
+    conn = sqlite3.connect(favoritesdb)
+    c = conn.cursor()
+    c.execute("INSERT INTO keywords VALUES (?)", (keyword,))
+    conn.commit()
+    conn.close()
+
+
+def delKeyword():
+    conn = sqlite3.connect(favoritesdb)
+    c = conn.cursor()
+    c.execute("DELETE FROM keywords;")
+    conn.commit()
+    conn.close()
 
 
 class switch(object):

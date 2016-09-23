@@ -62,9 +62,10 @@ class Route(object):
 
         return param
 
+
     def run(self):
         self.params = self.getParams()
-        self.mode = None # Может принимать 2 вида значений (числовое (обозначает роутинг) и словарь)
+        self.mode = None
         self.plugins = {}
 
         try:

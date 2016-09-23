@@ -19,8 +19,7 @@
 
 import urllib, re
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-
-import utils
+from resources.lib import utils
 
 progress = utils.progress
 

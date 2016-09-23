@@ -18,8 +18,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import sqlite3, utils, urllib
+import sqlite3, urllib
 import xbmc
+from resources.lib import utils
 
 favoritesdb = utils.favoritesdb
 

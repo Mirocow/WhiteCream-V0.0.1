@@ -18,8 +18,7 @@
 
 import urllib, urllib2, re, cookielib, os.path, sys, socket
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-
-import utils
+from resources.lib import utils
 
 #450: Main()
 #451: List(url)

@@ -18,10 +18,8 @@
 
 import urllib, urllib2, re, cookielib, os.path, sys, socket
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-
 import urlparse, json
-
-import utils
+from resources.lib import utils
 
 progress = utils.progress
 

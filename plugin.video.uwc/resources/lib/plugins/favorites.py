@@ -18,8 +18,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import xbmc, xbmcplugin, sqlite3
-import utils
+import xbmc
+import xbmcplugin
+import sqlite3
+from resources.lib import utils
 
 dialog = utils.dialog
 favoritesdb = utils.favoritesdb

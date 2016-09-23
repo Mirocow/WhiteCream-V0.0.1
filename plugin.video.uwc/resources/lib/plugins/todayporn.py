@@ -18,8 +18,7 @@
 
 import urllib, urllib2, re, cookielib, os.path, sys, socket
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-
-import utils
+from resources.lib import utils
 
 # 90 TPMain
 # 91 TPList

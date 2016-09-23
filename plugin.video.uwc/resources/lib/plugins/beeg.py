@@ -18,10 +18,11 @@
 
 import urllib, urllib2, re, cookielib, os.path, sys, socket, json
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-import utils, search
+from resources.lib import utils
+import search
 
 # from youtube-dl
-from compat import (
+from resources.lib.compat import (
     compat_chr,
     compat_ord,
     compat_urllib_parse_unquote,

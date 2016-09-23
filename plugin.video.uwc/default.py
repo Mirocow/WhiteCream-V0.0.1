@@ -17,8 +17,12 @@
 '''
 
 import socket
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-import route, utils
+import xbmc
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+from resources.lib import route
+from resources.lib import utils
 
 socket.setdefaulttimeout(60)
 

@@ -43,6 +43,11 @@
 
 <addon id="repository.whitecream" name="WhiteCream repo" version="0.0.2" provider-name="mortael">
         <extension point="xbmc.addon.repository" name="WhiteCream repo">
+                <dir>
+                    <info compressed="false">https://offshoregit.com/tvaresolvers/tva-common-repository/raw/master/addons.xml</info>
+                    <checksum>https://offshoregit.com/tvaresolvers/tva-common-repository/raw/master/addons.xml.md5</checksum>
+                    <datadir zip="true">https://offshoregit.com/tvaresolvers/tva-common-repository/raw/master/zips/</datadir>
+                </dir>
                 <info compressed="false">http://raw.github.com/Mirocow/WhiteCream-V0.0.2/master/addons.xml</info>
                 <checksum>http://raw.github.com/Mirocow/WhiteCream-V0.0.2/master/addons.xml.md5</checksum>
                 <datadir zip="true">http://raw.github.com/Mirocow/WhiteCream-V0.0.2/master</datadir>

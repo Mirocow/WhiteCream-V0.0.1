@@ -17,9 +17,31 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
+import urllib
+import urllib2
+import re
+import cookielib
+import os.path
+import sys
+import socket
+import xbmc
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+import search
+import sqlite3
+import base64
+import json
+import gzip
+import urlparse
+import hashlib
 from resources.lib import utils
+from resources.lib import route
+from resources.lib import cloudflare
+from resources.lib import compat
+from resources.lib import jjdecode
+from resources.lib import jsunpack
+from StringIO import StringIO
 
 progress = utils.progress
 
@@ -27,14 +49,14 @@ def Main():
     utils.addDir('[COLOR hotpink]Search[/COLOR]','http://justporn.to/?s=', 244, '', '')
     utils.addDir('[COLOR hotpink]Movies[/COLOR]','http://justporn.to/category/dvdrips-full-movies/', 245, '', '')
     List('http://justporn.to/category/scenes/')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def MainMovies():
     utils.addDir('[COLOR hotpink]Search[/COLOR]','http://justporn.to/?s=', 244, '', '')
     utils.addDir('[COLOR hotpink]Scenes[/COLOR]','http://justporn.to/category/scenes/', 240, '', '')
     List('http://justporn.to/category/dvdrips-full-movies/')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def List(url):
@@ -50,7 +72,7 @@ def List(url):
         nextp = nextp[0]
         utils.addDir('Next Page', nextp, 241,'')
     except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
     
 def Search(url, keyword=None):

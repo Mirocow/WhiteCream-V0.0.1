@@ -16,21 +16,43 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
+import urllib
+import urllib2
+import re
+import cookielib
+import os.path
+import sys
+import socket
+import xbmc
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+import search
+import sqlite3
+import base64
+import json
+import gzip
+import urlparse
+import hashlib
 from resources.lib import utils
+from resources.lib import route
+from resources.lib import cloudflare
+from resources.lib import compat
+from resources.lib import jjdecode
+from resources.lib import jsunpack
+from StringIO import StringIO
 
 
-def HQMAIN():
+def Main():
     utils.addDir('[COLOR hotpink]Categories[/COLOR]','http://hqporner.com/porn-categories.php',153,'','')
     utils.addDir('[COLOR hotpink]Studios[/COLOR]','http://hqporner.com/porn-studios.php',153,'','')
     utils.addDir('[COLOR hotpink]Girls[/COLOR]','http://hqporner.com/porn-actress.php',153,'','')
     utils.addDir('[COLOR hotpink]Search[/COLOR]','http://hqporner.com/?s=',154,'','')
-    HQLIST('http://hqporner.com/hdporn/1')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    List('http://hqporner.com/hdporn/1')
+    return False
 
 
-def HQLIST(url):
+def List(url):
     link = utils.getHtml(url, '')
     match = re.compile('<a href="([^"]+)" class="image featured non-overlay".*?<img id="[^"]+" src="([^"]+)" alt="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(link)
     for url, img, name in match:
@@ -42,20 +64,20 @@ def HQLIST(url):
         nextp = "http://www.hqporner.com" + nextp[0]
         utils.addDir('Next Page', nextp,151,'')
     except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
-def HQCAT(url):
+def Cat(url):
     link = utils.getHtml(url, '')
     tags = re.compile('<a href="([^"]+)"[^<]+<img src="([^"]+)" alt="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(link)
     for caturl, catimg, catname in tags:
         caturl = "http://www.hqporner.com" + caturl
         catimg = "http://www.hqporner.com" + catimg        
         utils.addDir(catname,caturl,151,catimg)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
-def HQSEARCH(url, keyword=None):
+def Search(url, keyword=None):
     searchUrl = url
     if not keyword:
         utils.searchDir(url, 154)
@@ -63,14 +85,12 @@ def HQSEARCH(url, keyword=None):
         title = keyword.replace(' ','+')
         searchUrl = searchUrl + title
         print "Searching URL: " + searchUrl
-        HQLIST(searchUrl)
+        List(searchUrl)
 
 
-def HQPLAY(url, name, download=None):
+def Play(url, name, download=None):
     videopage = utils.getHtml(url, url)
     iframeurl = re.compile(r'<iframe\swidth="\d+"\sheight="\d+"\ssrc="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(videopage)
-    #if re.search('hqporner', iframeurl[0], re.DOTALL | re.IGNORECASE):
-    #    videourl = getHQ(iframeurl[0])
     if re.search('bemywife', iframeurl[0], re.DOTALL | re.IGNORECASE):
         videourl = getBMW(iframeurl[0])
     elif re.search('5\.79', iframeurl[0], re.DOTALL | re.IGNORECASE):
@@ -85,8 +105,6 @@ def HQPLAY(url, name, download=None):
 
 def getBMW(url):
     videopage = utils.getHtml(url, '')
-    #redirecturl = utils.getVideoLink(url, '')
-    #videodomain = re.compile("http://([^/]+)/", re.DOTALL | re.IGNORECASE).findall(redirecturl)[0]
     videos = re.compile(r'file: "([^"]+mp4)", label: "\d', re.DOTALL | re.IGNORECASE).findall(videopage)
     videourl = videos[-2]
     return videourl

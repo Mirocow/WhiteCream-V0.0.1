@@ -17,9 +17,31 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, re, base64
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
+import urllib
+import urllib2
+import re
+import cookielib
+import os.path
+import sys
+import socket
+import xbmc
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+import search
+import sqlite3
+import base64
+import json
+import gzip
+import urlparse
+import hashlib
 from resources.lib import utils
+from resources.lib import route
+from resources.lib import cloudflare
+from resources.lib import compat
+from resources.lib import jjdecode
+from resources.lib import jsunpack
+from StringIO import StringIO
 
 progress = utils.progress
 
@@ -28,7 +50,7 @@ def Main():
     utils.addDir('[COLOR hotpink]Categories[/COLOR]','http://www.hclips.com/categories/', 383, '', '')
     utils.addDir('[COLOR hotpink]Channels[/COLOR]','http://www.hclips.com/channels/', 385, '', '')
     List('http://www.hclips.com/latest-updates/')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 def List(url):
     print "hclips::List " + url
@@ -41,7 +63,7 @@ def List(url):
         nextp=re.compile('<li class="next">.+?<a href="([^"]+)".*?>Next</a>', re.DOTALL | re.IGNORECASE).findall(listhtml)
         utils.addDir('Next Page', 'http://www.hclips.com' + nextp[0], 381,'')
     except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
     
 def Search(url, keyword=None):
     searchUrl = url
@@ -53,12 +75,12 @@ def Search(url, keyword=None):
         print "Searching URL: " + searchUrl
         List(searchUrl)
 
-def Categories(url):
+def Cat(url):
     cathtml = utils.getHtml(url, '')
     match = re.compile('<a class="tooltip" href="(http://www.hclips.com/categories/.+?)" id=".+?">.+?<strong>(.+?)</strong>.+?<img src="(http://hclips.com/contents/categories/.+?)".+?height="88" width="119">', re.DOTALL).findall(cathtml)
     for catpage, name, img, in match:
         if not name.startswith('Gay'): utils.addDir(name, catpage, 381, img, '')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 def Channels(url):
     print "hclips::Channels " + url
@@ -71,7 +93,7 @@ def Channels(url):
         nextp=re.compile('<li class="next">.+?<a href="([^"]+)".*?>Next</a>', re.DOTALL | re.IGNORECASE).findall(listhtml)
         utils.addDir('Next Page', 'http://www.hclips.com' + nextp[0], 385,'')
     except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 def ChannelList(url):
     print "hclips::List " + url
@@ -84,7 +106,7 @@ def ChannelList(url):
         nextp=re.compile('<li class="next">.+?<a href="([^"]+)".*?>Next</a>', re.DOTALL | re.IGNORECASE).findall(listhtml)
         utils.addDir('Next Page', 'http://www.hclips.com' + nextp[0], 386,'')
     except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
     
 def Playvid(url, name, download=None):
     html = utils.getHtml(url, '')

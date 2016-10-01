@@ -17,65 +17,77 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, re, base64
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
+import re
+
+import xbmc
+import xbmcgui
 from resources.lib import utils
+
+# from resources.lib import compat
 
 progress = utils.progress
 
-#elif mode == 440: spankbang.Main()
-#elif mode == 441: spankbang.List(url)
-#elif mode == 442: spankbang.Playvid(url, name, download)
-#elif mode == 443: spankbang.Categories(url)
-#elif mode == 444: spankbang.Search(url, keyword)
-
 base_url = 'http://spankbang.com'
-main_mode = 440
-list_mode =  441
-play_mode = 442
-categories_mode = 443
-search_mode = 444
+
+
+def init(route):
+    route.add(1, '[COLOR hotpink]SpankBang[/COLOR]', 'http://spankbang.com/new_videos/', 440, 'spankbang.png', '')
+    route.add(440, '[COLOR hotpink]Search[/COLOR]', 'http://spankbang.com/s/', 444, '', '')
+    route.add(440, '[COLOR hotpink]Categories[/COLOR]', 'http://spankbang.com/categories', 443, '', '')
+    route.add(440, '', '', {'plugin': 'spankbang', 'call': 'Main'})
+    route.add(441, '', '', {'plugin': 'spankbang', 'call': 'List', 'params': ['url', 'page']})
+    route.add(443, '', '', {'plugin': 'spankbang', 'call': 'Cat', 'params': ['url']})
+    route.add(442, '', '', {'plugin': 'spankbang', 'call': 'Playvid', 'params': ['url', 'name', 'download']})
+    route.add(444, '', '', {'plugin': 'spankbang', 'call': 'Search', 'params': ['route', 'url', 'keyword']})
+
 
 def Main():
-    utils.addDir('[COLOR hotpink]Search[/COLOR]','http://spankbang.com/s/', search_mode, '', '')
-    utils.addDir('[COLOR hotpink]Categories[/COLOR]','http://spankbang.com/categories', categories_mode, '', '')
     List('http://spankbang.com/new_videos/1/')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
+
 
 def List(url):
     print "spankbang::List " + url
     listhtml = utils.getHtml(url, '')
-    match = re.compile(r'<a href="([^"]+)" class="thumb">\s*?<img src="([^"]+)" alt="([^"]+)" class="cover".*?</span>(.*?)i-len"><i class="fa fa-clock-o"></i>([^<]+)<', re.DOTALL).findall(listhtml)
+    match = re.compile(
+        r'<a href="([^"]+)" class="thumb">\s*?<img src="([^"]+)" alt="([^"]+)" class="cover".*?</span>(.*?)i-len"><i class="fa fa-clock-o"></i>([^<]+)<',
+        re.DOTALL).findall(listhtml)
     for videopage, img, name, hd, duration in match:
         if hd.find('HD') > 0:
             hd = " [COLOR orange]HD[/COLOR] "
         else:
             hd = " "
         name = utils.cleantext(name) + hd + "[COLOR deeppink]" + duration + "m[/COLOR]"
-        utils.addDownLink(name, base_url + videopage, play_mode, 'http:' + img, '')
+        utils.addDownLink(name, base_url + videopage, 442, 'http:' + img, '')
     try:
-        nextp=re.compile('<li class="active"><a>.+?</a></li><li><a href="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(listhtml)
-        utils.addDir('Next Page', base_url + nextp[0], list_mode,'')
-    except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
-    
+        nextp = re.compile('<li class="active"><a>.+?</a></li><li><a href="([^"]+)"',
+                           re.DOTALL | re.IGNORECASE).findall(listhtml)
+        utils.addDir('Next Page', base_url + nextp[0], 441, '')
+    except:
+        pass
+    return False
+
+
 def Search(url, keyword=None):
     searchUrl = url
     if not keyword:
-        utils.searchDir(url, search_mode)
+        utils.searchDir(url, 444)
     else:
-        title = keyword.replace(' ','+')
+        title = keyword.replace(' ', '+')
         searchUrl = searchUrl + title + '/'
         print "Searching URL: " + searchUrl
         List(searchUrl)
 
-def Categories(url):
+
+def Cat(url):
     cathtml = utils.getHtml(url, '')
-    match = re.compile('<a href="/category/([^"]+)"><img src="([^"]+)"><span>([^>]+)</span>', re.DOTALL).findall(cathtml)
+    match = re.compile('<a href="/category/([^"]+)"><img src="([^"]+)"><span>([^>]+)</span>', re.DOTALL).findall(
+        cathtml)
     for catpage, img, name in match:
-        utils.addDir(name, base_url + '/category/' + catpage, list_mode, base_url + img, '')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
-    
+        utils.addDir(name, base_url + '/category/' + catpage, 441, base_url + img, '')
+    return False
+
+
 def Playvid(url, name, download=None):
     html = utils.getHtml(url, '')
     stream_id = re.compile("stream_id  = '([^']+)';").findall(html)

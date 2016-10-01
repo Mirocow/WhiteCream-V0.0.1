@@ -16,8 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import os, sys, urllib, utils, copy
-import  xbmcaddon, xbmcplugin
+import copy
+import os
+import sys
+import urllib
+import utils
+
+import xbmcplugin
 
 progress = utils.progress
 imgDir = utils.imgDir
@@ -104,7 +109,7 @@ class Route(object):
             if items:
                 if isinstance(items[0]['mode'], dict):
                     mode = items[0]['mode']
-                    plugin = self.load_plugin(mode['plugin'])
+                    plugin = self.loadPlugin(mode['plugin'])
                     params = []
                     if 'params' in mode:
                         for param in mode['params']:
@@ -207,6 +212,8 @@ class Route(object):
 
         xbmcplugin.endOfDirectory(utils.addon_handle, cacheToDisc=False)
 
-    def load_plugin(self, plugin):
-        sys.path = [os.path.dirname(__file__) + '/plugins'] + sys.path
+    def loadPlugin(self, plugin):
+        plugin = plugin.replace(".py", "")
+        #dialog.ok("Debug", "Load plugin: " + plugin)
+        sys.path = [utils.pluginsDir] + sys.path
         return __import__(plugin, None, None, [''])

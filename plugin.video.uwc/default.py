@@ -21,6 +21,10 @@ import xbmc
 import xbmcplugin
 import xbmcgui
 import xbmcaddon
+import os
+import sys
+from os import listdir
+from os.path import isfile, join
 from resources.lib import route
 from resources.lib import utils
 
@@ -44,19 +48,19 @@ if age:
     route = route.Route()
 
     # Index
-    route.add(None, '[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Scenes[/COLOR]','',1,'icon.png','')
-    route.add(None, '[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Movies[/COLOR]','',2,'icon.png','')
-    route.add(None, '[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Favorites[/COLOR]','',901,'icon.png','')
+    route.add(None, '[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Scenes[/COLOR]','', 1,'icon.png','')
+    route.add(None, '[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Movies[/COLOR]','', 2,'icon.png','')
+    route.add(None, '[COLOR hotpink]Whitecream[/COLOR] [COLOR white]Favorites[/COLOR]','', 901,'icon.png','')
 
     # Add plugins (Plugin must has merhod init())
-    plugins = [
-        'favorites',
-        'search',
-        'watchxxxfree', 'xxxsorg', 'beeg',
-        'xtheatre',
-    ]
+    pluginsPath = utils.pluginsDir
+    plugins = [f for f in listdir(pluginsPath) if isfile(join(pluginsPath, f))]
     for plugin in plugins:
-        plugin = route.load_plugin(plugin)
+        if plugin == '__init__.py':
+            continue
+        if not plugin[-3:] == ".py":
+            continue
+        plugin = route.loadPlugin(plugin)
         getattr(plugin, 'init')(route)
 
     route.run()

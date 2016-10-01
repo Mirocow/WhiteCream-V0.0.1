@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 '''
     Ultimate Whitecream
@@ -18,24 +18,26 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
+import re
+
 import search
 from resources.lib import utils
+
+# from resources.lib import compat
 
 addon = utils.addon
 
 sortlistwxf = [addon.getLocalizedString(30012), addon.getLocalizedString(30013), addon.getLocalizedString(30014)]
 
+
 def init(route):
     route.add(1, '[COLOR hotpink]WatchXXXFree[/COLOR]', 'http://www.watchxxxfree.com/page/1/', 10, 'wxf.png')
-
-    route.add(10, '[COLOR hotpink]Categories[/COLOR]','http://www.watchxxxfree.com/categories/',12,'','')
-    route.add(10, '[COLOR hotpink]Search[/COLOR]','http://www.watchxxxfree.com/page/1/?s=',14,'','')
-    route.add(10, '[COLOR hotpink]Top Pornstars[/COLOR]','http://www.watchxxxfree.com/top-pornstars/',15,'','')
-    route.add(10, '[COLOR hotpink]Current sort:[/COLOR] ' + sortlistwxf[int(addon.getSetting("sortwxf"))], '', 16, '', '')
+    route.add(10, '[COLOR hotpink]Categories[/COLOR]', 'http://www.watchxxxfree.com/categories/', 12, '', '')
+    route.add(10, '[COLOR hotpink]Search[/COLOR]', 'http://www.watchxxxfree.com/page/1/?s=', 14, '', '')
+    route.add(10, '[COLOR hotpink]Top Pornstars[/COLOR]', 'http://www.watchxxxfree.com/top-pornstars/', 15, '', '')
+    route.add(10, '[COLOR hotpink]Current sort:[/COLOR] ' + sortlistwxf[int(addon.getSetting("sortwxf"))], '', 16, '',
+              '')
     route.add(10, '', '', {'plugin': 'watchxxxfree', 'call': 'Main'})
-
     route.add(11, '', '', {'plugin': 'watchxxxfree', 'call': 'List', 'params': ['url', 'page']})
     route.add(12, '', '', {'plugin': 'watchxxxfree', 'call': 'Cat', 'params': ['url']})
     route.add(13, '', '', {'plugin': 'watchxxxfree', 'call': 'Video', 'params': ['url', 'name', 'download']})
@@ -50,12 +52,13 @@ def Settings(route):
 
 
 def Main():
-    return List('http://watchxxxfree.com/page/1/',1)
+    return List('http://watchxxxfree.com/page/1/', 1)
 
 
 def Cat(url):
     cathtml = utils.getHtml(url, '')
-    match = re.compile('data-lazy-src="([^"]+)".*?<a href="([^"]+)"[^<]+<span>([^<]+)</s.*?">([^<]+)', re.DOTALL | re.IGNORECASE).findall(cathtml)
+    match = re.compile('data-lazy-src="([^"]+)".*?<a href="([^"]+)"[^<]+<span>([^<]+)</s.*?">([^<]+)',
+                       re.DOTALL | re.IGNORECASE).findall(cathtml)
     for img, catpage, name, videos in match:
         catpage = catpage + 'page/1/'
         name = name + ' [COLOR deeppink]' + videos + '[/COLOR]'
@@ -77,13 +80,14 @@ def Search(route, url, keyword=None):
     if not keyword:
         return search.searchDir(route, url, 14)
     else:
-        title = keyword.replace(' ','+')
+        title = keyword.replace(' ', '+')
         searchUrl = searchUrl + title
         return List(searchUrl, 1)
 
-def List(url, page, onelist=None):
+
+def List(url, page=1, onelist=None):
     if onelist:
-        url = url.replace('/page/1/','/page/'+str(page)+'/')
+        url = url.replace('/page/1/', '/page/' + str(page) + '/')
 
     sort = getSortMethod()
 
@@ -91,9 +95,13 @@ def List(url, page, onelist=None):
         url = url + '&filtre=' + sort + '&display=extract'
     else:
         url = url + '?filtre=' + sort + '&display=extract'
-
-    listhtml = utils.getHtml(url, '')
-    match = re.compile('data-lazy-src="([^"]+)".*?<a href="([^"]+)" title="([^"]+)".*?<p>([^<]+)</p>', re.DOTALL | re.IGNORECASE).findall(listhtml)
+    try:
+        listhtml = utils.getHtml(url, '')
+    except:
+        utils.notify('Oh oh', 'It looks like this website is down.')
+        return None
+    match = re.compile('data-lazy-src="([^"]+)".*?<a href="([^"]+)" title="([^"]+)".*?<p>([^<]+)</p>',
+                       re.DOTALL | re.IGNORECASE).findall(listhtml)
     for img, videopage, name, desc in match:
         name = utils.cleantext(name)
         desc = utils.cleantext(desc)
@@ -101,14 +109,14 @@ def List(url, page, onelist=None):
 
     if not onelist:
         if re.search('<link rel="next"', listhtml, re.DOTALL | re.IGNORECASE):
-            npage = page + 1        
-            url = url.replace('/page/'+str(page)+'/','/page/'+str(npage)+'/')
-            utils.addDir('Next Page ('+str(npage)+')', url, 11, '', npage)
+            npage = page + 1
+            url = url.replace('/page/' + str(page) + '/', '/page/' + str(npage) + '/')
+            utils.addDir('Next Page (' + str(npage) + ')', url, 11, '', npage)
         return False
 
 
 def Video(url, name, download):
-    utils.playVideoByUrl(url, name, download)
+    utils.playVideoByUrl(url, name, download=None)
     return True
 
 
@@ -117,4 +125,4 @@ def getSortMethod():
                    1: 'rate',
                    2: 'views'}
     sortvalue = addon.getSetting("sortwxf")
-    return sortoptions[int(sortvalue)]    
+    return sortoptions[int(sortvalue)]

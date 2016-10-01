@@ -16,12 +16,31 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-from resources.lib import utils
-
-from StringIO import StringIO
+import urllib
+import urllib2
+import re
+import cookielib
+import os.path
+import sys
+import socket
+import xbmc
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+import search
+import sqlite3
+import base64
+import json
 import gzip
+import urlparse
+import hashlib
+from resources.lib import utils
+from resources.lib import route
+from resources.lib import cloudflare
+from resources.lib import compat
+from resources.lib import jjdecode
+from resources.lib import jsunpack
+from StringIO import StringIO
 
 addon = utils.addon
 
@@ -49,7 +68,7 @@ def Main(name):
     List(0, '', 0)
 
 
-def Categories(caturl):
+def Cat(caturl):
     if addon.getSetting("pdsection") == '1':
         caturl = 'http://www.porndig.com/amateur/videos/'
     urldata = utils.getHtml(caturl, pdreferer, headers, data='')
@@ -59,7 +78,7 @@ def Categories(caturl):
     reobj = re.compile(r'value="(\d+)"[^>]*?>([^<]+)<', re.DOTALL | re.IGNORECASE).findall(urldata[0])
     for catchannel, catname in reobj:
         utils.addDir(catname, '', 291, '', 0, catchannel, 3)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def VideoListData(page, channel):
@@ -154,7 +173,7 @@ def Pornstars(url, page):
     if i >= 60:
         page += 1
         utils.addDir('Page ' + str(page), url, 295, '', page)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def Studios(url, page):
@@ -172,7 +191,7 @@ def Studios(url, page):
     if i >= 60:
         page += 1
         utils.addDir('Page ' + str(page), url, 294, '', page)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def List(page, channel, section):
@@ -210,7 +229,7 @@ def List(page, channel, section):
         page += 1
         name = 'Page ' + str(page)
         utils.addDir(name, '', 291, '', page, channel, section)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def Playvid(url, name, download=None):

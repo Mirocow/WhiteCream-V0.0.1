@@ -16,9 +16,31 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
+import urllib
+import urllib2
+import re
+import cookielib
+import os.path
+import sys
+import socket
+import xbmc
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+import search
+import sqlite3
+import base64
+import json
+import gzip
+import urlparse
+import hashlib
 from resources.lib import utils
+from resources.lib import route
+from resources.lib import cloudflare
+from resources.lib import compat
+from resources.lib import jjdecode
+from resources.lib import jsunpack
+from StringIO import StringIO
 
 dialog = utils.dialog
 
@@ -26,7 +48,7 @@ def Main():
     utils.addDir('[COLOR hotpink]Categories[/COLOR]','http://en.paradisehill.cc/porn/',253,'','')
     utils.addDir('[COLOR hotpink]Search[/COLOR]','http://en.paradisehill.cc/search_results/?search=',254,'','')
     List('http://en.paradisehill.cc/porn/?page=1',1)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def List(url, page):
@@ -43,7 +65,7 @@ def List(url, page):
         npage = page + 1        
         url = url.replace('page='+str(page),'page='+str(npage))
         utils.addDir('Next Page ('+str(npage)+')', url, 251, '', npage)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def Cat(url):
@@ -55,7 +77,7 @@ def Cat(url):
         img = "http://en.paradisehill.cc" + img
         catpage = "http://en.paradisehill.cc" + caturl + "?page=1"
         utils.addDir(name, catpage, 251, img, 1)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def Search(url, keyword=None):

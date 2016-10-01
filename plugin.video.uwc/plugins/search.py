@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 '''
     Ultimate Whitecream
@@ -18,9 +18,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import sqlite3, urllib
+import sqlite3
+import urllib
+
 import xbmc
 from resources.lib import utils
+
+# from resources.lib import compat
 
 favoritesdb = utils.favoritesdb
 
@@ -39,7 +43,8 @@ def searchDir(route, url, mode, page=None):
             name = '[COLOR deeppink]' + urllib.unquote_plus(keyword) + '[/COLOR]'
             utils.addDir(name, url, mode, '', page=page, keyword=keyword)
 
-    except: pass
+    except:
+        pass
     route.add(mode, '[COLOR hotpink]Add Keyword[/COLOR]', url, 902, '', '', mode, folder=False)
     route.add(mode, '[COLOR hotpink]Clear list[/COLOR]', '', 903, '', folder=False)
     return False

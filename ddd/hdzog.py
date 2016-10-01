@@ -17,9 +17,31 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
+import urllib
+import urllib2
+import re
+import cookielib
+import os.path
+import sys
+import socket
+import xbmc
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+import search
+import sqlite3
+import base64
+import json
+import gzip
+import urlparse
+import hashlib
 from resources.lib import utils
+from resources.lib import route
+from resources.lib import cloudflare
+from resources.lib import compat
+from resources.lib import jjdecode
+from resources.lib import jsunpack
+from StringIO import StringIO
 
 progress = utils.progress
 
@@ -29,7 +51,7 @@ def Main():
     utils.addDir('[COLOR hotpink]Channels[/COLOR]','http://www.hdzog.com/channels/', 345, '', '')
     utils.addDir('[COLOR hotpink]Models[/COLOR]','http://www.hdzog.com/models/', 346, '', '')
     List('http://www.hdzog.com/new/')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def List(url):
@@ -42,7 +64,7 @@ def List(url):
         nextp=re.compile('<a href="(.+?)" title="Next Page" data-page-num.+?>Next page').findall(listhtml)
         utils.addDir('Next Page', 'http://www.hdzog.com' + nextp[0], 341,'')
     except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
     
 def Search(url, keyword=None):
@@ -56,13 +78,13 @@ def Search(url, keyword=None):
         List(searchUrl)
 
 
-def Categories(url):
+def Cat(url):
     listhtml = utils.getHtml(url, '')
     match = re.compile('<a href="(.+?)" title=".+?">\n.+?<div class="thumb">\n.+?<img class="thumb" src="(.+?)" alt="(.+?)"/>').findall(listhtml)
     for catpage, img, name in match:
         name = utils.cleantext(name)
         utils.addDir(name, catpage, 341, img, '')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def Channels(url):
@@ -76,7 +98,7 @@ def Channels(url):
         print "next: ", 'http://www.hdzog.com' + nextp[0]
         utils.addDir('Next Page', 'http://www.hdzog.com' + nextp[0], 345,'')
     except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 def Models(url):
     listhtml = utils.getHtml(url, '')
@@ -89,7 +111,7 @@ def Models(url):
         print "next: ", 'http://www.hdzog.com' + nextp[0]
         utils.addDir('Next Page', 'http://www.hdzog.com' + nextp[0], 346,'')
     except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def Playvid(url, name, download=None):

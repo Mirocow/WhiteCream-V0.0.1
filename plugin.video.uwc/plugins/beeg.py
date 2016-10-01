@@ -16,12 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket, json
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-from resources.lib import utils
-import search
+import re
+import sys
 
-# from youtube-dl
+import plugins.search
+import xbmc
+import xbmcgui
+from resources.lib import utils
 from resources.lib.compat import (
     compat_chr,
     compat_ord,
@@ -30,6 +31,7 @@ from resources.lib.compat import (
 
 dialog = utils.dialog
 addon = utils.addon
+
 
 # 80 Main
 # 81 List
@@ -43,9 +45,10 @@ def init(route):
     route.add(1, '[COLOR hotpink]Beeg[/COLOR]', 'http://beeg.com/page-1', 80, 'bg.png', '')
 
     route.add(80, '', '', {'plugin': 'watchxxxfree', 'call': 'Main'})
-    route.add(80, '[COLOR hotpink]Categories[/COLOR]', 'http://api2.beeg.com/api/v6/' + bgversion + '/index/main/0/pc', 82,'', '')
-    route.add(80, '[COLOR hotpink]Search[/COLOR]', 'http://api2.beeg.com/api/v6/' + bgversion + '/index/main/0/pc?query=', 84, '', '')
-
+    route.add(80, '[COLOR hotpink]Categories[/COLOR]', 'http://api2.beeg.com/api/v6/' + bgversion + '/index/main/0/pc',
+              82, '', '')
+    route.add(80, '[COLOR hotpink]Search[/COLOR]',
+              'http://api2.beeg.com/api/v6/' + bgversion + '/index/main/0/pc?query=', 84, '', '')
 
     route.add(81, '', '', {'plugin': 'beeg', 'call': 'List', 'params': ['url']})
     route.add(82, '', '', {'plugin': 'beeg', 'call': 'Cat', 'params': ['url']})
@@ -54,41 +57,44 @@ def init(route):
 
 
 def Version():
-    bgpage = utils.getHtml('http://beeg.com','')
+    bgpage = utils.getHtml('http://beeg.com', '')
     bgversion = re.compile(r"cpl/(\d+)\.js", re.DOTALL | re.IGNORECASE).findall(bgpage)[0]
     bgsavedversion = addon.getSetting('bgversion')
     if bgversion <> bgsavedversion:
-        addon.setSetting('bgversion',bgversion)
-        bgjspage = utils.getHtml('http://static.beeg.com/cpl/'+bgversion+'.js','http://beeg.com')
+        addon.setSetting('bgversion', bgversion)
+        bgjspage = utils.getHtml('http://static.beeg.com/cpl/' + bgversion + '.js', 'http://beeg.com')
         bgsalt = re.compile('beeg_salt="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(bgjspage)[0]
-        addon.setSetting('bgsalt',bgsalt)
+        addon.setSetting('bgsalt', bgsalt)
+
 
 def Main():
     bgversion = addon.getSetting('bgversion')
-    List('http://api2.beeg.com/api/v6/'+bgversion+'/index/main/0/pc')
+    List('http://api2.beeg.com/api/v6/' + bgversion + '/index/main/0/pc')
     return False
 
 
 def List(url):
     bgversion = addon.getSetting('bgversion')
-    listjson = utils.getHtml(url,'')
+    listjson = utils.getHtml(url, '')
 
     match = re.compile(r'\{"title":"([^"]+)","id":"([^"]+)"', re.DOTALL | re.IGNORECASE).findall(listjson)
 
     for title, videoid in match:
-        img = "http://img.beeg.com/236x177/" + videoid +  ".jpg"
-        videopage = "https://api.beeg.com/api/v6/"+bgversion+"/video/" + videoid
+        img = "http://img.beeg.com/236x177/" + videoid + ".jpg"
+        videopage = "https://api.beeg.com/api/v6/" + bgversion + "/video/" + videoid
         name = title.encode("utf8")
         utils.addDownLink(name, videopage, 83, img, '')
     try:
-        page=re.compile('http://api2.beeg.com/api/v6/'+bgversion+'/index/[^/]+/([0-9]+)/pc', re.DOTALL | re.IGNORECASE).findall(url)[0]
+        page = re.compile('http://api2.beeg.com/api/v6/' + bgversion + '/index/[^/]+/([0-9]+)/pc',
+                          re.DOTALL | re.IGNORECASE).findall(url)[0]
         page = int(page)
         npage = page + 1
         jsonpage = re.compile(r'pages":(\d+)', re.DOTALL | re.IGNORECASE).findall(listjson)[0]
         if int(jsonpage) > page:
-            nextp = url.replace("/"+str(page)+"/", "/"+str(npage)+"/")
-            utils.addDir('Next Page ('+str(npage)+')', nextp,81,'')
-    except: pass
+            nextp = url.replace("/" + str(page) + "/", "/" + str(npage) + "/")
+            utils.addDir('Next Page (' + str(npage) + ')', nextp, 81, '')
+    except:
+        pass
     return False
 
 
@@ -97,6 +103,7 @@ def split(o, e):
     def cut(s, x):
         n.append(s[:x])
         return s[x:]
+
     n = []
     r = len(o) % e
     if r > 0:
@@ -113,15 +120,15 @@ def decrypt_key(key):
     a = bgsalt
     e = compat_urllib_parse_unquote(key)
     o = ''.join([
-        compat_chr(compat_ord(e[n]) - compat_ord(a[n % len(a)]) % 21)
-        for n in range(len(e))])
-    return ''.join(split(o, 3)[::-1])   
+                    compat_chr(compat_ord(e[n]) - compat_ord(a[n % len(a)]) % 21)
+                    for n in range(len(e))])
+    return ''.join(split(o, 3)[::-1])
 
 
 def Video(url, name, download=None):
-    videopage = utils.getHtml(url,'http://beeg.com')
+    videopage = utils.getHtml(url, 'http://beeg.com')
     videopage = json.loads(videopage)
-   
+
     if not videopage["240p"] == None:
         url = videopage["240p"].encode("utf8")
     if not videopage["480p"] == None:
@@ -129,12 +136,12 @@ def Video(url, name, download=None):
     if not videopage["720p"] == None:
         url = videopage["720p"].encode("utf8")
 
-    url = url.replace("{DATA_MARKERS}","data=pc_XX")
+    url = url.replace("{DATA_MARKERS}", "data=pc_XX")
     if not url.startswith("http:"): url = "https:" + url
-    
+
     key = re.compile("/key=(.*?)%2Cend", re.DOTALL | re.IGNORECASE).findall(url)[0]
     decryptedkey = decrypt_key(key)
-    
+
     videourl = url.replace(key, decryptedkey)
 
     if download == 1:
@@ -143,7 +150,7 @@ def Video(url, name, download=None):
         iconimage = xbmc.getInfoImage("ListItem.Thumb")
         listitem = xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
         listitem.setInfo('video', {'Title': name, 'Genre': 'Porn'})
-        listitem.setProperty("IsPlayable","true")
+        listitem.setProperty("IsPlayable", "true")
         if int(sys.argv[1]) == -1:
             pl = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
             pl.clear()
@@ -162,7 +169,7 @@ def Cat(url):
     tags = re.compile(r'"nonpopular":\[(.*?)\]', re.DOTALL | re.IGNORECASE).findall(caturl)[0]
     tags = re.compile('"([^"]+)"', re.DOTALL | re.IGNORECASE).findall(tags)
     for tag in tags:
-        videolist = "http://api2.beeg.com/api/v6/"+bgversion+"/index/tag/0/mobile?tag=" + tag.encode("utf8")
+        videolist = "http://api2.beeg.com/api/v6/" + bgversion + "/index/tag/0/mobile?tag=" + tag.encode("utf8")
         name = tag.encode("utf8")
         name = name[:1].upper() + name[1:]
         utils.addDir(name, videolist, 81, '')
@@ -172,9 +179,9 @@ def Cat(url):
 def Search(route, url, keyword=None):
     searchUrl = url
     if not keyword:
-        return search.searchDir(route, url, 84)
+        return plugins.search.searchDir(route, url, 84)
     else:
-        title = keyword.replace(' ','+')
+        title = keyword.replace(' ', '+')
         searchUrl = searchUrl + title
         print "Searching URL: " + searchUrl
         return List(searchUrl)

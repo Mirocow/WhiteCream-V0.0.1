@@ -16,30 +16,31 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-from resources.lib import utils
 
-# 90 TPMain
-# 91 TPList
-# 92 TPPlayvid
-# 93 TPCat
-# 94 TPSearch
-# 95 TPPornstars
-
-def TPMain():
-    utils.addDir('[COLOR hotpink]Categories[/COLOR]','http://www.todayporn.com/channels/',93,'','')
-    utils.addDir('[COLOR hotpink]Pornstars[/COLOR]','http://www.todayporn.com/pornstars/page1.html',95,'','')
-    utils.addDir('[COLOR hotpink]Top Rated[/COLOR]','http://www.todayporn.com/top-rated/a/page1.html',91,'','')
-    utils.addDir('[COLOR hotpink]Most Viewed[/COLOR]','http://www.todayporn.com/most-viewed/a/page1.html',91,'','')
-    utils.addDir('[COLOR hotpink]Search[/COLOR]','http://www.todayporn.com/search/page1.html?q=',94,'','')
-    TPList('http://www.todayporn.com/page1.html',1)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+def init(route):
+    route.add(1, '[COLOR hotpink]TodayPorn[/COLOR]', 'http://www.todayporn.com/page1.html', 90, 'tp.png', '')
+    route.add(90, '[COLOR hotpink]Categories[/COLOR]', 'http://www.todayporn.com/channels/', 93, '', '')
+    route.add(90, '[COLOR hotpink]Pornstars[/COLOR]', 'http://www.todayporn.com/pornstars/page1.html', 95, '', '')
+    route.add(90, '[COLOR hotpink]Top Rated[/COLOR]', 'http://www.todayporn.com/top-rated/a/page1.html', 91, '', '')
+    route.add(90, '[COLOR hotpink]Most Viewed[/COLOR]', 'http://www.todayporn.com/most-viewed/a/page1.html', 91, '', '')
+    route.add(90, '[COLOR hotpink]Search[/COLOR]', 'http://www.todayporn.com/search/page1.html?q=', 94, '', '')
+    route.add(90, '', '', {'plugin': 'todayporn', 'call': 'Main'})
+    route.add(91, '', '', {'plugin': 'todayporn', 'call': 'List', 'params': ['url']})
+    route.add(92, '', '', {'plugin': 'todayporn', 'call': 'Playvid', 'params': ['url', 'name', 'download']})
+    route.add(93, '', '', {'plugin': 'todayporn', 'call': 'Cat', 'params': ['url']})
+    route.add(94, '', '', {'plugin': 'todayporn', 'call': 'Search', 'params': ['route', 'url', 'keyword']})
+    route.add(95, '', '', {'plugin': 'todayporn', 'call': 'Pornstars', 'params': ['url']})
 
 
-def TPList(url, page):
+def Main():
+    List('http://www.todayporn.com/page1.html', 1)
+    return False
+
+
+def List(url, page):
     listhtml = utils.getHtml(url, '')
-    match = re.compile('prefix="([^"]+)[^<]+[^"]+"([^"]+)">([^<]+)<[^"]+[^>]+>([^\s]+)\s', re.DOTALL | re.IGNORECASE).findall(listhtml)
+    match = re.compile('prefix="([^"]+)[^<]+[^"]+"([^"]+)">([^<]+)<[^"]+[^>]+>([^\s]+)\s',
+                       re.DOTALL | re.IGNORECASE).findall(listhtml)
     for thumb, videourl, name, duration in match:
         name = utils.cleantext(name)
         videourl = "http://www.todayporn.com" + videourl
@@ -47,13 +48,13 @@ def TPList(url, page):
         name = name + " [COLOR deeppink]" + duration + "[/COLOR]"
         utils.addDownLink(name, videourl, 92, thumb, '')
     if re.search('Next &raquo;</a>', listhtml, re.DOTALL | re.IGNORECASE):
-        npage = page + 1        
-        url = url.replace('page'+str(page),'page'+str(npage))
-        utils.addDir('Next Page ('+str(npage)+')', url, 91, '', npage)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+        npage = page + 1
+        url = url.replace('page' + str(page), 'page' + str(npage))
+        utils.addDir('Next Page (' + str(npage) + ')', url, 91, '', npage)
+    return False
 
 
-def TPPlayvid(url, name, download=None):
+def layvid(url, name, download=None):
     videopage = utils.getHtml(url, '')
     match = re.compile(r"url: '([^']+)',\s+f", re.DOTALL | re.IGNORECASE).findall(videopage)
     if match:
@@ -67,35 +68,36 @@ def TPPlayvid(url, name, download=None):
             xbmc.Player().play(videourl, listitem)
 
 
-def TPCat(url):
+def Cat(url):
     caturl = utils.getHtml(url, '')
     match = re.compile('<img src="([^"]+)"[^<]+<[^"]+"([^"]+)">([^<]+)<', re.DOTALL | re.IGNORECASE).findall(caturl)
     for thumb, caturl, cat in match:
         caturl = "http://www.todayporn.com" + caturl + "page1.html"
         utils.addDir(cat, caturl, 91, thumb, 1)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
-def TPPornstars(url, page):
+def Pornstars(url, page):
     pshtml = utils.getHtml(url, '')
-    pornstars = re.compile("""img" src='([^']+)'[^<]+<[^"]+"([^"]+)"[^>]+>([^<]+)<.*?total[^>]+>([^<]+)<""", re.DOTALL | re.IGNORECASE).findall(pshtml)
+    pornstars = re.compile("""img" src='([^']+)'[^<]+<[^"]+"([^"]+)"[^>]+>([^<]+)<.*?total[^>]+>([^<]+)<""",
+                           re.DOTALL | re.IGNORECASE).findall(pshtml)
     for img, psurl, title, videos in pornstars:
         psurl = "http://www.todayporn.com" + psurl + "page1.html"
-        title = title + " [COLOR deeppink]" + videos + "[/COLOR]" 
+        title = title + " [COLOR deeppink]" + videos + "[/COLOR]"
         utils.addDir(title, psurl, 91, img, 1)
     if re.search('Next &raquo;</a>', pshtml, re.DOTALL | re.IGNORECASE):
         npage = page + 1
-        url = url.replace('page'+str(page),'page'+str(npage))
-        utils.addDir('Next Page ('+str(npage)+')', url, 95, '', npage)        
-    xbmcplugin.endOfDirectory(utils.addon_handle)
-    
+        url = url.replace('page' + str(page), 'page' + str(npage))
+        utils.addDir('Next Page (' + str(npage) + ')', url, 95, '', npage)
+    return False
 
-def TPSearch(url, keyword=None):
+
+def Search(url, keyword=None):
     searchUrl = url
     if not keyword:
         utils.searchDir(url, 94)
     else:
-        title = keyword.replace(' ','+')
+        title = keyword.replace(' ', '+')
         searchUrl = searchUrl + title + "&s=new"
         print "Searching URL: " + searchUrl
-        TPList(searchUrl, 1)
+        List(searchUrl, 1)

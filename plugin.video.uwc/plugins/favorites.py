@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 '''
     Ultimate Whitecream
@@ -18,10 +18,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import xbmc
-import xbmcplugin
 import sqlite3
+
+import xbmc
 from resources.lib import utils
+
+# from resources.lib import compat
 
 dialog = utils.dialog
 favoritesdb = utils.favoritesdb
@@ -35,8 +37,10 @@ except:
     pass
 conn.close()
 
+
 def init(route):
-    route.add(900, '', '', {'plugin': 'favorites', 'call': 'Favorites', 'params': ['fav', 'favmode', 'name', 'url', 'img']})
+    route.add(900, '', '',
+              {'plugin': 'favorites', 'call': 'Favorites', 'params': ['fav', 'favmode', 'name', 'url', 'img']})
     route.add(901, '', '', {'plugin': 'favorites', 'call': 'List'})
 
 
@@ -49,25 +53,25 @@ def List():
         for (name, url, mode, img) in c.fetchall():
             utils.addDownLink(name, url, int(mode), img, '', '', 'del')
         conn.close()
-        xbmcplugin.endOfDirectory(utils.addon_handle)
+        return False
     except:
         conn.close()
-        utils.notify('No Favorites','No Favorites found')
+        utils.notify('No Favorites', 'No Favorites found')
         return
 
 
-def Favorites(fav,mode,name,url,img):
+def Favorites(fav, mode, name, url, img):
     if fav == "add":
         delFav(url)
         addFav(mode, name, url, img)
-        utils.notify('Favorite added','Video added to the favorites')
+        utils.notify('Favorite added', 'Video added to the favorites')
     elif fav == "del":
         delFav(url)
-        utils.notify('Favorite deleted','Video removed from the list')
+        utils.notify('Favorite deleted', 'Video removed from the list')
         xbmc.executebuiltin('Container.Refresh')
 
 
-def addFav(mode,name,url,img):
+def addFav(mode, name, url, img):
     conn = sqlite3.connect(favoritesdb)
     conn.text_factory = str
     c = conn.cursor()
@@ -82,5 +86,3 @@ def delFav(url):
     c.execute("DELETE FROM favorites WHERE url = '%s'" % url)
     conn.commit()
     conn.close()
-
-

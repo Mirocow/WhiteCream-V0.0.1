@@ -16,10 +16,31 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket, hashlib
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-
+import urllib
+import urllib2
+import re
+import cookielib
+import os.path
+import sys
+import socket
+import xbmc
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+import search
+import sqlite3
+import base64
+import json
+import gzip
+import urlparse
+import hashlib
 from resources.lib import utils
+from resources.lib import route
+from resources.lib import cloudflare
+from resources.lib import compat
+from resources.lib import jjdecode
+from resources.lib import jsunpack
+from StringIO import StringIO
 
 
 def Main():
@@ -29,7 +50,7 @@ def Main():
     utils.addDir('[COLOR hotpink]Categories[/COLOR]','http://www.absoluporn.com/en',303,'','')
     utils.addDir('[COLOR hotpink]Search[/COLOR]','http://www.absoluporn.com/en/search-',304,'','')
     List('http://www.absoluporn.com/en/wall-date-1.html')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 def List(url):
     listhtml = utils.getHtml(url, '')
@@ -52,7 +73,7 @@ def List(url):
         nextp = nextp.replace(" ","%20")
         utils.addDir('Next Page', 'http://www.absoluporn.com' + nextp, 301,'')
     except: pass    
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def Playvid(url, name, download=None):
@@ -79,7 +100,7 @@ def Cat(url):
     for caturl, name in match1:
         catpage = 'http://www.absoluporn.com' + caturl
         utils.addDir(name, catpage, 301, '', '')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def Search(url, keyword=None):

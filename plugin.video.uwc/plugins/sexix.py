@@ -16,36 +16,42 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
+import re
+
+import search
 from resources.lib import utils
 
-#450: Main()
-#451: List(url)
-#452: Playvid(url, name, download)
-#453: Categories(url)
-#454: Search(url, keyword)
+
+def init(route):
+    route.add(1, '[COLOR hotpink]Sexix[/COLOR]', 'http://sexix.net/', 450, 'sexix.png', '')
+    route.add(450, '[COLOR hotpink]Categories[/COLOR]', 'http://sexix.net/', 453, '', '')
+    route.add(450, '[COLOR hotpink]Search[/COLOR]', 'http://sexix.net/?s=', 454, '', '')
+    route.add(450, '', '', {'plugin': 'sexix', 'call': 'Main'})
+    route.add(451, '', '', {'plugin': 'sexix', 'call': 'List', 'params': ['url', 'page']})
+    route.add(453, '', '', {'plugin': 'sexix', 'call': 'Cat', 'params': ['url']})
+    route.add(452, '', '', {'plugin': 'sexix', 'call': 'Playvid', 'params': ['url', 'name', 'download']})
+    route.add(454, '', '', {'plugin': 'sexix', 'call': 'Search', 'params': ['route', 'url', 'keyword']})
 
 
 def Main():
-    utils.addDir('[COLOR hotpink]Categories[/COLOR]','http://sexix.net/',453,'','')
-    utils.addDir('[COLOR hotpink]Search[/COLOR]','http://sexix.net/?s=',454,'','')
     List('http://sexix.net/page/1/?orderby=date')
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
 def List(url):
     listhtml = utils.getHtml(url, '')
     match = re.compile('<div id="main">(.*?)<div id="sidebar', re.DOTALL | re.IGNORECASE).findall(listhtml)[0]
-    match1 = re.compile(r'data-id="\d+" title="([^"]+)" href="([^"]+)".*?src="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(match)
+    match1 = re.compile(r'data-id="\d+" title="([^"]+)" href="([^"]+)".*?src="([^"]+)"',
+                        re.DOTALL | re.IGNORECASE).findall(match)
     for name, videopage, img in match1:
         name = utils.cleantext(name)
         utils.addDownLink(name, videopage, 452, img, '')
     try:
         nextp = re.compile('href="([^"]+)">Next', re.DOTALL | re.IGNORECASE).findall(match)
-        utils.addDir('Next Page', nextp[0], 451,'')
-    except: pass
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+        utils.addDir('Next Page', nextp[0], 451, '')
+    except:
+        pass
+    return False
 
 
 def Playvid(url, name, download):
@@ -57,15 +63,16 @@ def Playvid(url, name, download):
     if videourl:
         utils.playvid(videourl, name, download)
     else:
-        utils.notify('Oh oh','Couldn\'t find a video')
+        utils.notify('Oh oh', 'Couldn\'t find a video')
 
 
-def Categories(url):
+def Cat(url):
     cathtml = utils.getHtml(url, '')
-    match = re.compile('<a href="(http://sexix.net/videotag/[^"]+)"[^>]+>([^<]+)<', re.DOTALL | re.IGNORECASE).findall(cathtml)
+    match = re.compile('<a href="(http://sexix.net/videotag/[^"]+)"[^>]+>([^<]+)<', re.DOTALL | re.IGNORECASE).findall(
+        cathtml)
     for catpage, name in match:
-        utils.addDir(name, catpage, 451, '')    
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+        utils.addDir(name, catpage, 451, '')
+    return False
 
 
 def Search(url, keyword=None):
@@ -73,7 +80,6 @@ def Search(url, keyword=None):
     if not keyword:
         utils.searchDir(url, 454)
     else:
-        title = keyword.replace(' ','+')
+        title = keyword.replace(' ', '+')
         searchUrl = searchUrl + title
         List(searchUrl)
-

@@ -16,22 +16,36 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib, urllib2, re, cookielib, os.path, sys, socket
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
+import re
+
+import search
 from resources.lib import utils
 
 
-def PTMain():
-    utils.addDir('[COLOR hotpink]Categories[/COLOR]','http://www.porntrex.com/categories',53,'','')
-    utils.addDir('[COLOR hotpink]Search[/COLOR]','http://www.porntrex.com/search?search_type=videos&page=1&search_query=',54,'','')
-    PTList('http://www.porntrex.com/videos?o=mr&page=1',1)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+def init(route):
+    route.add(1, '[COLOR hotpink]PornTrex[/COLOR]', 'http://www.porntrex.com/videos?o=mr&page=1', 50, 'pt.png', '')
+    route.add(50, '[COLOR hotpink]Categories[/COLOR]', 'http://www.porntrex.com/categories', 53, '', '')
+    route.add(50, '[COLOR hotpink]Search[/COLOR]',
+              'http://www.porntrex.com/search?search_type=videos&page=1&search_query=', 54, '', '')
+    route.add(50, '', '', {'plugin': 'porntrex', 'call': 'Main'})
+    route.add(51, '', '', {'plugin': 'porntrex', 'call': 'List', 'params': ['url', 'page']})
+    route.add(53, '', '', {'plugin': 'porntrex', 'call': 'Cat', 'params': ['url']})
+    route.add(52, '', '', {'plugin': 'porntrex', 'call': 'Playvid', 'params': ['url', 'name', 'download']})
+    route.add(54, '', '', {'plugin': 'porntrex', 'call': 'Search', 'params': ['route', 'url', 'keyword']})
 
-def PTList(url, page, onelist=None):
+
+def Main():
+    List('http://www.porntrex.com/videos?o=mr&page=1', 1)
+    return False
+
+
+def List(url, page, onelist=None):
     if onelist:
-        url = url.replace('page=1','page='+str(page))
+        url = url.replace('page=1', 'page=' + str(page))
     listhtml = utils.getHtml(url, '')
-    match = re.compile(r'<div class="(?:visible-xs|thumb-overlay)+">\s+<img src=.*?data-original="([^"]+)" title="([^"]+)"[^>]+>(.*?)duration">[^\d]+([^\t\n\r]+)', re.DOTALL | re.IGNORECASE).findall(listhtml)
+    match = re.compile(
+        r'<div class="(?:visible-xs|thumb-overlay)+">\s+<img src=.*?data-original="([^"]+)" title="([^"]+)"[^>]+>(.*?)duration">[^\d]+([^\t\n\r]+)',
+        re.DOTALL | re.IGNORECASE).findall(listhtml)
     for img, name, hd, duration in match:
         name = utils.cleantext(name)
         if hd.find('HD') > 0:
@@ -44,17 +58,20 @@ def PTList(url, page, onelist=None):
         utils.addDownLink(name, videopage, 52, img, '')
     if not onelist:
         if re.search('class="prevnext">Next', listhtml, re.DOTALL | re.IGNORECASE):
-            npage = page + 1        
-            url = url.replace('page='+str(page),'page='+str(npage))
-            utils.addDir('Next Page ('+str(npage)+')', url, 51, '', npage)
-        xbmcplugin.endOfDirectory(utils.addon_handle)
+            npage = page + 1
+            url = url.replace('page=' + str(page), 'page=' + str(npage))
+            utils.addDir('Next Page (' + str(npage) + ')', url, 51, '', npage)
+        return False
 
-def PTPlayvid(url, name, download=None):
+
+def layvid(url, name, download=None):
     videopage = utils.getHtml(url, '')
     match = re.compile("<filehd>([^<]+)<", re.DOTALL | re.IGNORECASE).findall(videopage)
     match2 = re.compile("<file>([^<]+)<", re.DOTALL | re.IGNORECASE).findall(videopage)
-    try: videourl = match[0]
-    except: videourl = match2[0]
+    try:
+        videourl = match[0]
+    except:
+        videourl = match2[0]
     if download == 1:
         utils.downloadVideo(videourl, name)
     else:
@@ -64,22 +81,22 @@ def PTPlayvid(url, name, download=None):
         xbmc.Player().play(videourl, listitem)
 
 
-def PTCat(url):
+def Cat(url):
     cathtml = utils.getHtml(url, '')
     match = re.compile('c=([^"]+)".*?original="([^"]+)" title="([^"]+)"', re.DOTALL | re.IGNORECASE).findall(cathtml)
     for catid, img, name in match:
         img = "http://www.porntrex.com/" + img
-        catpage = "http://www.porntrex.com/videos?c="+ catid + "&o=mr&page=1"
+        catpage = "http://www.porntrex.com/videos?c=" + catid + "&o=mr&page=1"
         utils.addDir(name, catpage, 51, img, 1)
-    xbmcplugin.endOfDirectory(utils.addon_handle)
+    return False
 
 
-def PTSearch(url, keyword=None):
+def Search(url, keyword=None):
     searchUrl = url
     if not keyword:
         utils.searchDir(url, 54)
     else:
-        title = keyword.replace(' ','+')
+        title = keyword.replace(' ', '+')
         searchUrl = searchUrl + title
         print "Searching URL: " + searchUrl
-        PTList(searchUrl, 1)
+        List(searchUrl, 1)
